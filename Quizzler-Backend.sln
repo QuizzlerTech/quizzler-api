@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33723.286
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quizzler-Backend", "Quizzler-Backend.csproj", "{9C31113E-45B2-45DF-B93D-96157566AE12}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9C31113E-45B2-45DF-B93D-96157566AE12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C31113E-45B2-45DF-B93D-96157566AE12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C31113E-45B2-45DF-B93D-96157566AE12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C31113E-45B2-45DF-B93D-96157566AE12}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {46F2044F-310A-42AA-A344-8A8B8F3552BC}
+	EndGlobalSection
+EndGlobal
