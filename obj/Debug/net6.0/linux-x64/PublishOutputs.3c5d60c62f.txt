@@ -1,4 +1,0 @@
-C:\Users\Mikolaj\Documents\GitHub\Quizzler-Backend\Quizzler-Backend\bin\Debug\net6.0\linux-x64\publish\appsettings.Development.json
-C:\Users\Mikolaj\Documents\GitHub\Quizzler-Backend\Quizzler-Backend\bin\Debug\net6.0\linux-x64\publish\appsettings.json
-C:\Users\Mikolaj\Documents\GitHub\Quizzler-Backend\Quizzler-Backend\bin\Debug\net6.0\linux-x64\publish\Quizzler-Backend.pdb
-C:\Users\Mikolaj\Documents\GitHub\Quizzler-Backend\Quizzler-Backend\bin\Debug\net6.0\linux-x64\publish\Quizzler-Backend
