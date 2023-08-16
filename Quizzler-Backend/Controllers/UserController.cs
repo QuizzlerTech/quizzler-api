@@ -1,7 +1,9 @@
 using Azure;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.ObjectPool;
 using Quizzler_Backend.Controllers.Services;
 using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Models;
@@ -9,8 +11,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 
-// Defining the route and controller type
-[Route("api/[controller]")]
+[Route("api/user")]
 [ApiController]
 public class UserController : ControllerBase
 {
@@ -24,35 +25,105 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-    // GET: api/User/
-    // Method to get user by their email
+    // GET: api/profile
+    // Method to get logged user profile info 
     [Authorize]
-    [HttpGet("GetUser")]
-    public async Task<ActionResult<User>> GetUser(string email)
+    [HttpGet("profile")]
+    public async Task<ActionResult<User>> GetMyProfile()
     {
-        var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
-
-        if (user == null)
+        try
         {
-            return NotFound();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return await GetUserProfile(Convert.ToInt32(userId));
         }
-
-        return user;
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
-    // GET: api/User/validateJWT
+    // GET: api/user/{id}/profile
+    // Method to get profile info 
+    [Authorize]
+    [HttpGet("{id}/profile")]
+    public async Task<ActionResult<User>> GetUserProfile(int id)
+    {
+        var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == id);
+        if (user == null) return NotFound();
+        var result = new User
+        {
+            UserId = user.UserId,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            LastSeen = user.LastSeen,
+            DateRegistered = user.DateRegistered,
+        };
+        return result;
+    }
+
+    // PUT: api/user/update
+    // Method to get profile info 
+    [Authorize]
+    [HttpPatch("update")]
+    public async Task<ActionResult<User>> UpdateUser(UserUpdateDto userUpdateDto)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+
+        if (!await _userService.AreCredentialsCorrect(new LoginDto { Email = user.Email, Password = userUpdateDto.CurrentPassword })) return StatusCode(400, $"Wrong credentials");
+
+
+        // Checks if the email or username already exists
+        if (userUpdateDto.Email is not null)
+        {
+            if (await _userService.EmailExists(userUpdateDto.Email) && !(userUpdateDto.Email == user.Email)) return StatusCode(409, $"Email {userUpdateDto.Email} already registered");
+        }
+        if (userUpdateDto.Username is not null)
+        {
+            if (await _userService.UsernameExists(userUpdateDto.Username) && !(userUpdateDto.Username == user.Username)) return StatusCode(409, $"Username {userUpdateDto.Username} already registered");
+        }
+        // Checks if the email is correct
+        if (userUpdateDto.Email is not null)
+        {
+            if (!_userService.IsEmailCorrect(userUpdateDto.Email)) return StatusCode(422, $"Email {userUpdateDto.Email} is not a proper email address");
+        }
+        // Checks if the password meets the criteria
+        if (userUpdateDto.Password is not null)
+        {
+            if (!_userService.IsPasswordGoodEnough(userUpdateDto.Password)) return StatusCode(422, $"Password does not meet the requirements");
+        }
+
+        user.Username = userUpdateDto.Username ?? user.Username;
+        user.Email = userUpdateDto.Email ?? user.Email;
+        user.FirstName = userUpdateDto.FirstName ?? user.FirstName;
+        user.LastName = userUpdateDto.LastName ?? user.LastName;
+        user.LoginInfo.PasswordHash = userUpdateDto.Password != null ? _userService.HashPassword(userUpdateDto.Password, user.LoginInfo.Salt) : user.LoginInfo.PasswordHash;
+        user.Avatar = userUpdateDto.Avatar ?? user.Avatar;
+
+        _context.SaveChanges();
+
+        return Ok("Updated");
+    }
+
+    // GET: api/user/check
     // Method to validate JSON Web Token
     [Authorize]
-    [HttpGet("ValidateJWT")]
-    public async Task<ActionResult<User>> ValidateJWT()
+    [HttpGet("check")]
+    public async Task<ActionResult<User>> CheckAuth()
     {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+        user.LastSeen = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
         return Ok("You are authorized!");
     }
 
-    // POST: api/User/registerUser
+    // POST: api/user/register
     // Method to register a new user
-    [HttpPost("RegisterUser")]
-    public async Task<ActionResult<User>> RegisterUser(UserRegisterDto userRegisterDto)
+    [HttpPost("register")]
+    public async Task<ActionResult<User>> Register(UserRegisterDto userRegisterDto)
     {
         // Checks if the email or username already exists
         if (await _userService.EmailExists(userRegisterDto.Email))
@@ -64,7 +135,7 @@ public class UserController : ControllerBase
             return StatusCode(409, $"Username {userRegisterDto.Username} already registered");
         }
 
-        // Checks if the email is correctly formatted
+        // Checks if the email is correct
         if (!_userService.IsEmailCorrect(userRegisterDto.Email))
         {
             return StatusCode(422, $"Email {userRegisterDto.Email} is not a proper email address");
@@ -81,26 +152,28 @@ public class UserController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return new CreatedAtActionResult(nameof(GetUser), "User", new { email = user.Email }, "Created user");
+        return new CreatedAtActionResult(nameof(GetUserProfile), "User", new { id = user.UserId }, "Created user");
 
     }
 
-    // POST: api/User/loginUser
+    // POST: api/user/login
     // Method for user login
-    [HttpPost("LoginUser")]
-    public async Task<ActionResult<User>> LoginUser(LoginDto loginDto)
+    [HttpPost("login")]
+    public async Task<ActionResult<User>> Login(LoginDto loginDto)
     {
         // Checks if the user exists
-        if (!await _userService.DoesExist(loginDto.UsernameOrEmail))
+        if (!await _userService.DoesExist(loginDto.Email))
         {
-            return StatusCode(409, $"{loginDto.UsernameOrEmail} is not registered");
+            return StatusCode(409, $"{loginDto.Email} is not registered");
         }
 
         // Checks if the login credentials are correct
-        if (await _userService.AreLoginCredentialsCorrect(loginDto))
+        if (await _userService.AreCredentialsCorrect(loginDto))
         {
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Username == loginDto.UsernameOrEmail || u.Email == loginDto.UsernameOrEmail);
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
             var token = _userService.GenerateJwtToken(user);
+            user.LastSeen = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
             return Ok(token);
         }
         else
@@ -108,21 +181,19 @@ public class UserController : ControllerBase
             return StatusCode(400, $"Wrong credentials");
         }
     }
-
-    // DELETE: api/User/deleteUser
+    // DELETE: api/user/delete
     // Method to delete a user
     [Authorize]
-    [HttpDelete("DeleteUser")]
-    public async Task<ActionResult<User>> DeleteUser(string userPassword)
+    [HttpDelete("delete")]
+    public async Task<ActionResult<User>> Delete(string userPassword)
     {
-
-        var email = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
         try
         {
-            if (await _userService.AreCredentialsCorrectByEmail(email, userPassword))
+            if (await _userService.AreCredentialsCorrect(new LoginDto { Email = user.Email, Password = userPassword }))
             {
                 // Removes user from the database and save changes
-                var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
                 _context.User.Remove(user);
                 await _context.SaveChangesAsync();
                 return Ok("User deleted successfully.");
@@ -132,7 +203,8 @@ public class UserController : ControllerBase
         {
             return NotFound();
         }
+
         return StatusCode(403, "Invalid credentials");
     }
-
 }
+

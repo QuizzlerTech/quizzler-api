@@ -55,61 +55,14 @@ namespace Quizzler_Backend.Controllers.Services
         }
 
         // Validate if entered login credentials are correct
-        public async Task<bool> AreLoginCredentialsCorrect(LoginDto loginDto)
+        public async Task<bool> AreCredentialsCorrect(LoginDto loginDto)
         {
-            if (IsEmailCorrect(loginDto.UsernameOrEmail)) return await AreCredentialsCorrectByEmail(loginDto.UsernameOrEmail, loginDto.Password);
-            return await AreCredentialsCorrectByUsername(loginDto.UsernameOrEmail, loginDto.Password);
-
-        }
-        public async Task<bool> AreCredentialsCorrectByEmail(string email, string password)
-        {
-            var loginInfo = await GetLoginInfoByEmail(email);
-            string generatedPassword = HashPassword(password, loginInfo.Salt);
-            if (generatedPassword == loginInfo.PasswordHash) return true;
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            string generatedPassword = HashPassword(loginDto.Password, user.LoginInfo.Salt);
+            if (generatedPassword == user.LoginInfo.PasswordHash) return true;
             return false;
-
-        }
-        public async Task<bool> AreCredentialsCorrectByUsername(string username, string password)
-        {
-            var loginInfo = await GetLoginInfoByUsername(username);
-            string generatedPassword = HashPassword(password, loginInfo.Salt);
-            if (generatedPassword == loginInfo.PasswordHash) return true;
-            return false;
-
         }
 
-        // Get login information by email
-        private async Task<LoginInfo> GetLoginInfoByEmail(string email)
-        {
-            var user = await _context.User
-                                     .Include(u => u.LoginInfo)
-                                     .FirstOrDefaultAsync(u => u.Email == email);
-
-            if (user == null)
-            {
-                // Handle case where user is not found
-                throw new Exception("User not found");
-            }
-
-            return user.LoginInfo;
-        }
-
-        // Get login information by username
-        private async Task<LoginInfo> GetLoginInfoByUsername(string username)
-        {
-            var user = await _context.User
-                                     .Include(u => u.LoginInfo)
-                                     .FirstOrDefaultAsync(u => u.Username == username);
-
-            if (user == null)
-            {
-                throw new Exception("User not found");
-            }
-
-            return user.LoginInfo;
-        }
-
-        // Validate email format
         public bool IsEmailCorrect(string email)
         {
             try
@@ -131,24 +84,26 @@ namespace Quizzler_Backend.Controllers.Services
 
 
         // Register a new user
-        public async Task<User> CreateUser(UserRegisterDto userDto)
+        public async Task<User> CreateUser(UserRegisterDto userRegisterDto)
         {
             var user = new User
             {
-                Email = userDto.Email,
-                Username = userDto.Username,
-                FirstName = userDto.FirstName,
-                LastName = userDto.LastName,
+                Email = userRegisterDto.Email,
+                Username = userRegisterDto.Username,
+                FirstName = userRegisterDto.FirstName,
+                LastName = userRegisterDto.LastName,
                 DateRegistered = DateTime.UtcNow,
+                LastSeen = DateTime.UtcNow,
                 Media = new List<Media>(),
                 Lesson = new List<Lesson>(),
                 LoginInfo = new LoginInfo
                 {
                     Salt = CreateSalt(),
                 }
+
             };
 
-            user.LoginInfo.PasswordHash = HashPassword(userDto.Password, user.LoginInfo.Salt);
+            user.LoginInfo.PasswordHash = HashPassword(userRegisterDto.Password, user.LoginInfo.Salt);
             return user;
         }
 
@@ -183,15 +138,15 @@ namespace Quizzler_Backend.Controllers.Services
         // Generate a JWT token for a user
         public string GenerateJwtToken(User user)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtKey"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
             };
 
-            var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
-                _configuration["Jwt:Issuer"],
+            var token = new JwtSecurityToken(_configuration["JwtIssuer"],
+                _configuration["JwtIssuer"],
                 claims,
                 expires: DateTime.Now.AddMinutes(60 * 24 * 7),
                 signingCredentials: credentials);

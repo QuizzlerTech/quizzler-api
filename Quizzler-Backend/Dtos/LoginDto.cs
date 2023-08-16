@@ -3,7 +3,7 @@
     // Data Transfer Object
     public class LoginDto
     {
-        public string UsernameOrEmail { get; set; }
+        public string Email { get; set; }
         public string Password { get; set; }
     }
 }

@@ -7,16 +7,17 @@ public class QuizzlerDbContext : DbContext
     public QuizzlerDbContext(DbContextOptions<QuizzlerDbContext> options)
         : base(options)
     {
-
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
         modelBuilder.Entity<User>().OwnsOne(u => u.LoginInfo);
         base.OnModelCreating(modelBuilder);
     }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseMySql("Server=not for public repo;Port=3306;Database=not for public repo;Uid=not for public repo;Pwd=not for public repo", new MySqlServerVersion(new Version(8, 0, 21)));
+
+        optionsBuilder.UseMySql(Environment.GetEnvironmentVariable("DbConnection"), new MySqlServerVersion(new Version(8, 0, 21)));
     }
     public DbSet<User> User { get; set; }
     public DbSet<LoginInfo> LoginInfo { get; set; }

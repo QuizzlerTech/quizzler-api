@@ -24,9 +24,12 @@ namespace Quizzler_Backend.Models
         public string? LastName { get; set; }
 
         public DateTime DateRegistered { get; set; }
+        public DateTime LastSeen { get; set; }
 
+        public int Avatar { get; set; } = 1;
         public List<Lesson> Lesson { get; set; } = new List<Lesson>();
         public List<Media> Media { get; set; } = new List<Media>();
         public LoginInfo LoginInfo { get; set; }
+
     }
 }

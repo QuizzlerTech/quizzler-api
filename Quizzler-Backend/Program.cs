@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Quizzler_Backend.Controllers.Services;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -14,7 +15,7 @@ namespace Quizzler_Backend
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            var configuration = builder.Configuration;
             builder.WebHost.UseUrls("http://+:4200");
 
             builder.Services.AddControllers().AddJsonOptions(options =>
@@ -27,7 +28,6 @@ namespace Quizzler_Backend
             });
 
 
-            var configuration = builder.Configuration;
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
@@ -37,19 +37,47 @@ namespace Quizzler_Backend
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration["Jwt:Issuer"],
-                    ValidAudience = configuration["Jwt:Issuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
+                    ValidIssuer = configuration["JwtIssuer"],
+                    ValidAudience = configuration["JwtIssuer"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtKey"]))
                 };
             });
 
             builder.Services.AddDbContext<QuizzlerDbContext>(options =>
-                options.UseMySql(configuration.GetConnectionString("DefaultConnection"), new MySqlServerVersion(new Version(8, 0, 21))));
+                options.UseMySql(configuration["DbConnection"], new MySqlServerVersion(new Version(8, 0, 21))));
 
             builder.Services.AddScoped<UserService>();
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+
+                // Define the BearerAuth scheme
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer"
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+            });
 
             var app = builder.Build();
 
@@ -60,10 +88,12 @@ namespace Quizzler_Backend
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            /*            else
-                        {
-                            app.UseHttpsRedirection();
-                        }*/
+            /*            
+            else
+            {
+                app.UseHttpsRedirection();
+            }
+            */
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
