@@ -59,6 +59,7 @@ public class UserController : ControllerBase
             LastName = user.LastName,
             LastSeen = user.LastSeen,
             DateRegistered = user.DateRegistered,
+            Avatar = user.Avatar,
         };
         return result;
     }
