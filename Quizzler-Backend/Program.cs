@@ -16,7 +16,7 @@ namespace Quizzler_Backend
         {
             var builder = WebApplication.CreateBuilder(args);
             var configuration = builder.Configuration;
-            builder.WebHost.UseUrls("http://+:4200");
+            //builder.WebHost.UseUrls("http://+:4200");
 
             builder.Services.AddControllers().AddJsonOptions(options =>
             {
@@ -51,7 +51,7 @@ namespace Quizzler_Backend
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Quizzler Swagger", Version = "v1" });
 
                 // Define the BearerAuth scheme
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -64,19 +64,19 @@ namespace Quizzler_Backend
                 });
 
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
             });
 
             var app = builder.Build();

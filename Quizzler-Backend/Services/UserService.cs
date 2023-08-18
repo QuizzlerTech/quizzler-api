@@ -55,7 +55,7 @@ namespace Quizzler_Backend.Controllers.Services
         }
 
         // Validate if entered login credentials are correct
-        public async Task<bool> AreCredentialsCorrect(LoginDto loginDto)
+        public async Task<bool> AreCredentialsCorrect(UserLoginDto loginDto)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
             string generatedPassword = HashPassword(loginDto.Password, user.LoginInfo.Salt);
