@@ -16,21 +16,26 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0'
+          dotnet-version: '6.0.x'
 
-      - name: Build and publish
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish
         run: |
           cd Quizzler-Backend
-          dotnet publish -p:PublishSingleFile=true --runtime linux-x64
+          dotnet publish -c Release -r linux-x64 --self-contained true /p:PublishSingleFile=true -o out
 
       - name: Push to private repository
         run: |
           git clone https://${GH_PAT}@github.com/QuizzlerOrg/built-api.git
-          cp out/quizzler-backend built-api/
+          cp Quizzler-Backend/out/Quizzler-Backend built-api/
           cd built-api
-          git add quizzler-backend
+          git add Quizzler-Backend
           git commit -m "Update executable"
           git push
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-
