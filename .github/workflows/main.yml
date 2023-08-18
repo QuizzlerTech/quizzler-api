@@ -25,11 +25,12 @@ jobs:
 
       - name: Push to private repository
         run: |
-          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/QuizzlerOrg/built-api
+          git clone https://${GH_PAT}@github.com/QuizzlerOrg/built-api.git
           cp out/quizzler-backend built-api/
           cd built-api
           git add quizzler-backend
           git commit -m "Update executable"
           git push
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+
