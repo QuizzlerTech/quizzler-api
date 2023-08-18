@@ -21,7 +21,7 @@ jobs:
       - name: Build and publish
         run: |
           cd Quizzler-Backend
-          dotnet publish -c Release -r linux-x64 --self-contained true /p:PublishSingleFile=true -o out
+          dotnet publish -p:PublishSingleFile=true --runtime linux-x64
 
       - name: Push to private repository
         run: |
