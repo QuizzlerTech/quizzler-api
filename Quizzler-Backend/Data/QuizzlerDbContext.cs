@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Models;
-
+using System.Reflection.Emit;
 
 public class QuizzlerDbContext : DbContext
 {
@@ -8,17 +8,22 @@ public class QuizzlerDbContext : DbContext
         : base(options)
     {
     }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-
         modelBuilder.Entity<User>().OwnsOne(u => u.LoginInfo);
+        modelBuilder.Entity<Lesson>()
+            .HasOne(l => l.User)
+            .WithMany(u => u.Lesson)
+            .HasForeignKey(l => l.LessonOwner);
         base.OnModelCreating(modelBuilder);
     }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-
         optionsBuilder.UseMySql(Environment.GetEnvironmentVariable("DbConnection"), new MySqlServerVersion(new Version(8, 0, 21)));
     }
+
     public DbSet<User> User { get; set; }
     public DbSet<LoginInfo> LoginInfo { get; set; }
     public DbSet<Lesson> Lesson { get; set; }

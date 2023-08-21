@@ -31,7 +31,7 @@ namespace Quizzler_Backend.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                return await GetUserProfile(Convert.ToInt32(userId));
+                return await GetUserProfileById(Convert.ToInt32(userId));
             }
             catch (Exception ex)
             {
@@ -43,10 +43,10 @@ namespace Quizzler_Backend.Controllers
         // Method to get profile info 
         [Authorize]
         [HttpGet("{id}/profile")]
-        public async Task<ActionResult<User>> GetUserProfile(int id)
+        public async Task<ActionResult<User>> GetUserProfileById(int id)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == id);
-            if (user == null) return NotFound();
+            if (user == null) return NotFound("No user found");
             var result = new User
             {
                 UserId = user.UserId,
@@ -58,7 +58,7 @@ namespace Quizzler_Backend.Controllers
                 DateRegistered = user.DateRegistered,
                 Avatar = user.Avatar,
             };
-            return result;
+            return Ok(result);
         }
 
         // PATCH: api/user/update
@@ -163,8 +163,7 @@ namespace Quizzler_Backend.Controllers
 
             await _context.SaveChangesAsync();
 
-            return new CreatedAtActionResult(nameof(GetUserProfile), "User", new { id = user.UserId }, "Created user");
-
+            return new CreatedAtActionResult(nameof(GetUserProfileById), "User", new { id = user.UserId }, "Created user");
         }
 
         // POST: api/user/login
@@ -212,7 +211,7 @@ namespace Quizzler_Backend.Controllers
             }
             catch (Exception ex)
             {
-                return NotFound();
+                return NotFound("No user found");
             }
 
             return StatusCode(403, "Invalid credentials");

@@ -16,7 +16,6 @@ namespace Quizzler_Backend
         {
             var builder = WebApplication.CreateBuilder(args);
             var configuration = builder.Configuration;
-            //builder.WebHost.UseUrls("http://+:4200");
 
             builder.Services.AddControllers().AddJsonOptions(options =>
             {
@@ -47,6 +46,7 @@ namespace Quizzler_Backend
                 options.UseMySql(configuration["DbConnection"], new MySqlServerVersion(new Version(8, 0, 21))));
 
             builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<LessonService>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
