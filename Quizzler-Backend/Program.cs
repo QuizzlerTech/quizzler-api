@@ -88,11 +88,6 @@ namespace Quizzler_Backend
             {
                 app.UseExceptionHandler("/Error");
                 app.UseHsts();
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-                });
             }
             /*            
             else
@@ -100,6 +95,11 @@ namespace Quizzler_Backend
                 app.UseHttpsRedirection();
             }
             */
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+            });
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
