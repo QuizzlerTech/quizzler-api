@@ -62,6 +62,7 @@ namespace Quizzler_Backend.Controllers
                     var newMedia = await _globalService.SaveImage(lessonAddDto.Image, _lessonService.GenerateImageName(lessonAddDto.Title), userId);
                     if (newMedia == null) return new StatusCodeResult(StatusCodes.Status500InternalServerError);
                     _context.Media.Add(newMedia);
+                    lesson.Media = newMedia;
                 }
             }
 
@@ -69,6 +70,36 @@ namespace Quizzler_Backend.Controllers
             await _context.SaveChangesAsync();
 
             return new CreatedAtActionResult(nameof(GetLessonById), "Lesson", new { id = lesson.LessonId }, "Created lesson");
+        }        
+        // POST: api/lesson/update
+        // Method to create new lesson
+        [Authorize]
+        [HttpPatch("update")]
+        public async Task<ActionResult<Lesson>> UpdateLesson([FromForm] LessonUpdateDto lessonUpdateDto)
+        {
+            var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == userId);
+            var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId == lessonUpdateDto.LessonId);
+            
+            if (!(userId == lesson.OwnerId)) return Unauthorized("User is not the owner");
+            if (_lessonService.TitleExists(lessonUpdateDto.Title, user)) return BadRequest("User already has this lesson");
+            if (!_lessonService.IsTitleCorrect(lessonUpdateDto.Title)) return BadRequest("Wrong title");
+            if (!_lessonService.IsDescriptionCorrect(lessonUpdateDto.Description)) return BadRequest("Wrong description");
+
+
+            if (lessonUpdateDto.Image is not null)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await lessonUpdateDto.Image.CopyToAsync(memoryStream);
+                    var newMedia = await _globalService.SaveImage(lessonUpdateDto.Image, _lessonService.GenerateImageName(lessonUpdateDto.Title), userId);
+                    if (newMedia == null) return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+                    _context.Media.Add(newMedia);
+                }
+            }
+            await _context.SaveChangesAsync();
+
+            return Ok("Lesson updated");
         }
     }
 }

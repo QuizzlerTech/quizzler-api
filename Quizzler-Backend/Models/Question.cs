@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Quizzler_Backend.Models
 {
@@ -16,8 +17,9 @@ namespace Quizzler_Backend.Models
 
         public int? QuestionMediaId { get; set; }
 
-        public Quiz Quiz { get; set; }
-        public Media Media { get; set; }
-        public List<Answer> Answers { get; set; } = new List<Answer>();
+        [ForeignKey("QuizId")]
+        public virtual Quiz Quiz { get; set; }
+        public virtual Media Media { get; set; }
+        public virtual List<Answer> Answers { get; set; } = new List<Answer>();
     }
 }

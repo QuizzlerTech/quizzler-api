@@ -44,27 +44,28 @@ namespace Quizzler_Backend.Controllers.Services
         }
 
         // Check if user exists (by username or email)
-        public async Task<bool> DoesExist(string usernameOrEmail)
+        public async Task<bool> DoesExist(string email)
         {
             try
             {
-                usernameOrEmail = new MailAddress(usernameOrEmail).Address;
-                return await _context.User.AnyAsync(u => u.Email == usernameOrEmail);
+                email = new MailAddress(email).Address;
+                return true;
             }
             catch (FormatException)
             {
-                return await _context.User.AnyAsync(u => u.Username == usernameOrEmail);
+                return false;
             }
         }
 
         // Validate if entered login credentials are correct
         public async Task<bool> AreCredentialsCorrect(UserLoginDto userloginDto)
         {
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == userloginDto.Email);
+            var user = await _context.User.Include(u => u.LoginInfo).FirstOrDefaultAsync(u => u.Email == userloginDto.Email);
             string generatedPassword = _globalService.HashPassword(userloginDto.Password, user.LoginInfo.Salt);
             if (generatedPassword == user.LoginInfo.PasswordHash) return true;
             return false;
         }
+
 
         public bool IsEmailCorrect(string email)
         {

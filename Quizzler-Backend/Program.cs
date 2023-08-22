@@ -89,7 +89,10 @@ namespace Quizzler_Backend
                 app.UseExceptionHandler("/Error");
                 app.UseHsts();
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                });
             }
             /*            
             else

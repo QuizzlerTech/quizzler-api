@@ -28,12 +28,12 @@ namespace Quizzler_Backend.Controllers.Services
 
             var lesson = new Lesson
             {
-                LessonOwner = ownerId,
+                OwnerId = ownerId,
                 IsPublic = lessonAddDto.IsPublic,
                 Title = lessonAddDto.Title,
                 Description = lessonAddDto.Description,
                 DateCreated = DateTime.UtcNow,
-                User = user,
+                Owner = user,
             };
             return lesson;
         }

@@ -23,8 +23,11 @@ namespace Quizzler_Backend.Models
 
         public int? AnswerMediaId { get; set; }
 
-        public Lesson Lesson { get; set; }
-        public Media QuestionMedia { get; set; }
-        public Media AnswerMedia { get; set; }
+        [ForeignKey("LessonId")]
+        public virtual Lesson Lesson { get; set; }
+        [ForeignKey("QuestionMediaId")]
+        public virtual Media QuestionMedia { get; set; }
+        [ForeignKey("AnswerMediaId")]
+        public virtual Media AnswerMedia { get; set; }
     }
 }

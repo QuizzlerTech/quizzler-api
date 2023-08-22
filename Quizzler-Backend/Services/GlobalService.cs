@@ -52,14 +52,10 @@ namespace Quizzler_Backend.Services
                 media.Path = outputPath;
                 media.FileSize = file.Length;
 
-
-
                 return media;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(outputPath);
                 _logger.LogError(ex, "Error saving image");
                 return null;
             }

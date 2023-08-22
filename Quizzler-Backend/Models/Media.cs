@@ -22,8 +22,8 @@ namespace Quizzler_Backend.Models
         public long FileSize { get; set; }
 
         [ForeignKey("MediaTypeId")]
-        public MediaType MediaType { get; set; }
+        public virtual MediaType MediaType { get; set; }
         [ForeignKey("UploaderId")]
-        public User User { get; set; }
+        public virtual User Uploader { get; set; }
     }
 }

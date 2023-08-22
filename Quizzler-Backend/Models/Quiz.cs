@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Quizzler_Backend.Models
 {
@@ -23,7 +24,8 @@ namespace Quizzler_Backend.Models
 
         public DateTime DateCreated { get; set; }
 
-        public List<Question> Questions { get; set; } = new List<Question>();
-        public User User { get; set; }
+        public virtual List<Question> Questions { get; set; } = new List<Question>();
+        [ForeignKey("QuizOwner")]
+        public virtual User Owner { get; set; }
     }
 }

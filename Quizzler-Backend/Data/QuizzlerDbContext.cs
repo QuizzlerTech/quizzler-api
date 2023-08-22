@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Models;
 using System.Reflection.Emit;
-
+using Microsoft.EntityFrameworkCore.Proxies;
 public class QuizzlerDbContext : DbContext
 {
     public QuizzlerDbContext(DbContextOptions<QuizzlerDbContext> options)
@@ -13,9 +13,9 @@ public class QuizzlerDbContext : DbContext
     {
         modelBuilder.Entity<User>().OwnsOne(u => u.LoginInfo);
         modelBuilder.Entity<Lesson>()
-            .HasOne(l => l.User)
+            .HasOne(l => l.Owner)
             .WithMany(u => u.Lesson)
-            .HasForeignKey(l => l.LessonOwner);
+            .HasForeignKey(l => l.OwnerId);
 
         modelBuilder.Entity<Media>()
             .HasOne(m => m.MediaType)
@@ -23,7 +23,7 @@ public class QuizzlerDbContext : DbContext
             .HasForeignKey(m => m.MediaTypeId);
 
         modelBuilder.Entity<Media>()
-            .HasOne(m => m.User)
+            .HasOne(m => m.Uploader)
             .WithMany(u => u.Media)
             .HasForeignKey(m => m.UploaderId);
 

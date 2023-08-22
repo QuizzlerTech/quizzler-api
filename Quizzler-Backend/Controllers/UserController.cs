@@ -29,7 +29,7 @@ namespace Quizzler_Backend.Controllers
         // Method to get logged user profile info 
         [Authorize]
         [HttpGet("profile")]
-        public async Task<ActionResult<User>> GetMyProfile ()
+        public async Task<ActionResult<User>> GetMyProfile()
         {
             try
             {
@@ -75,7 +75,6 @@ namespace Quizzler_Backend.Controllers
 
             if (!await _userService.AreCredentialsCorrect(new UserLoginDto { Email = user.Email, Password = userUpdateDto.CurrentPassword })) return StatusCode(400, $"Wrong credentials");
 
-
             // Checks if the email or username already exists
             if (userUpdateDto.Email is not null)
             {
@@ -102,7 +101,7 @@ namespace Quizzler_Backend.Controllers
             user.LastName = userUpdateDto.LastName ?? user.LastName;
             user.LoginInfo.PasswordHash = userUpdateDto.Password != null ? _globalService.HashPassword(userUpdateDto.Password, user.LoginInfo.Salt) : user.LoginInfo.PasswordHash;
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok("Updated");
         }
@@ -114,10 +113,9 @@ namespace Quizzler_Backend.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
-
             user.Avatar = userUpdateAvatarDto.Avatar;
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok("Avatar updated");
         }
@@ -140,26 +138,12 @@ namespace Quizzler_Backend.Controllers
         public async Task<ActionResult<User>> Register(UserRegisterDto userRegisterDto)
         {
             // Checks if the email or username already exists
-            if (await _userService.EmailExists(userRegisterDto.Email))
-            {
-                return StatusCode(409, $"Email {userRegisterDto.Email} already registered");
-            }
-            if (await _userService.UsernameExists(userRegisterDto.Username))
-            {
-                return StatusCode(409, $"Username {userRegisterDto.Username} already registered");
-            }
-
+            if (await _userService.EmailExists(userRegisterDto.Email)) return StatusCode(409, $"Email {userRegisterDto.Email} already registered");
+            if (await _userService.UsernameExists(userRegisterDto.Username)) return StatusCode(409, $"Username {userRegisterDto.Username} already registered");
             // Checks if the email is correct
-            if (!_userService.IsEmailCorrect(userRegisterDto.Email))
-            {
-                return StatusCode(422, $"Email {userRegisterDto.Email} is not a proper email address");
-            }
-
+            if (!_userService.IsEmailCorrect(userRegisterDto.Email)) return StatusCode(422, $"Email {userRegisterDto.Email} is not a proper email address");
             // Checks if the password meets the criteria
-            if (!_userService.IsPasswordGoodEnough(userRegisterDto.Password))
-            {
-                return StatusCode(422, $"Password does not meet the requirements");
-            }
+            if (!_userService.IsPasswordGoodEnough(userRegisterDto.Password)) return StatusCode(422, $"Password does not meet the requirements");
 
             var user = await _userService.CreateUser(userRegisterDto);
             _context.User.Add(user);
@@ -175,24 +159,15 @@ namespace Quizzler_Backend.Controllers
         public async Task<ActionResult<User>> Login(UserLoginDto userLoginDto)
         {
             // Checks if the user exists
-            if (!await _userService.DoesExist(userLoginDto.Email))
-            {
-                return StatusCode(409, $"{userLoginDto.Email} is not registered");
-            }
+            if (!await _userService.DoesExist(userLoginDto.Email)) return StatusCode(409, $"{userLoginDto.Email} is not registered");
+            // Checks if the login credentials are incorrect
+            if (!await _userService.AreCredentialsCorrect(userLoginDto)) return StatusCode(400, $"Wrong credentials");
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == userLoginDto.Email);
+            var token = _userService.GenerateJwtToken(user);
+            user.LastSeen = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return Ok(token);
 
-            // Checks if the login credentials are correct
-            if (await _userService.AreCredentialsCorrect(userLoginDto))
-            {
-                var user = await _context.User.FirstOrDefaultAsync(u => u.Email == userLoginDto.Email);
-                var token = _userService.GenerateJwtToken(user);
-                user.LastSeen = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-                return Ok(token);
-            }
-            else
-            {
-                return StatusCode(400, $"Wrong credentials");
-            }
         }
         // DELETE: api/user/delete
         // Method to delete a user
@@ -204,20 +179,19 @@ namespace Quizzler_Backend.Controllers
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
             try
             {
-                if (await _userService.AreCredentialsCorrect(new UserLoginDto { Email = user.Email, Password = userPassword }))
-                {
-                    // Removes user from the database and save changes
-                    _context.User.Remove(user);
-                    await _context.SaveChangesAsync();
-                    return Ok("User deleted successfully.");
-                }
+                if (!await _userService.AreCredentialsCorrect(new UserLoginDto { Email = user.Email, Password = userPassword })) return StatusCode(403, "Invalid credentials");
+                // Removes user from the database and save changes
+                _context.User.Remove(user);
+                await _context.SaveChangesAsync();
+                return Ok("User deleted successfully.");
+
             }
             catch (Exception ex)
             {
                 return NotFound("No user found");
             }
 
-            return StatusCode(403, "Invalid credentials");
+
         }
     }
 

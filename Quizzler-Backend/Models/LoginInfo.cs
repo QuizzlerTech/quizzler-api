@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Quizzler_Backend.Models
 {
@@ -13,6 +14,7 @@ namespace Quizzler_Backend.Models
         [Required]
         public string Salt { get; set; }
 
-        public User User { get; set; }
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; }
     }
 }

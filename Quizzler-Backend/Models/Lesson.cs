@@ -9,7 +9,7 @@ namespace Quizzler_Backend.Models
         public int LessonId { get; set; }
 
         [Required]
-        public int LessonOwner { get; set; }
+        public int OwnerId { get; set; }
 
         [Required]
         public bool IsPublic { get; set; }
@@ -25,11 +25,11 @@ namespace Quizzler_Backend.Models
         public DateTime DateCreated { get; set; }
         public int? LessonMediaId { get; set; } = null;
 
-        public List<Flashcard> Flashcards { get; set; } = new List<Flashcard>();
-        [ForeignKey("LessonOwner")]
-        public User User { get; set; }
+        public virtual List<Flashcard> Flashcards { get; set; } = new List<Flashcard>();
+        [ForeignKey("OwnerId")]
+        public virtual User Owner { get; set; }
         [ForeignKey("LessonMediaId")]
-        public Media Media { get; set; }
+        public virtual Media Media { get; set; }
     }
 }
 

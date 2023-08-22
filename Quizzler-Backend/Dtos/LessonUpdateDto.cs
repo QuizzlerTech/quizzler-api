@@ -4,10 +4,11 @@ using System.ComponentModel.DataAnnotations;
 namespace Quizzler_Backend.Dtos
 {
     // Data Transfer Object
-    public class LessonAddDto
+    public class LessonUpdateDto
     {
-        public bool IsPublic { get; set; }
-        public string Title { get; set; }
+        public int LessonId { get; set; }
+        public bool? IsPublic { get; set; }
+        public string? Title { get; set; }
         public string? Description { get; set; }
         public IFormFile? Image { get; set; }
     }
