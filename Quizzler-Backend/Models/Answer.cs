@@ -4,6 +4,7 @@ namespace Quizzler_Backend.Models
 {
     public class Answer
     {
+        [Key]
         public int AnswerId { get; set; }
 
         [Required]

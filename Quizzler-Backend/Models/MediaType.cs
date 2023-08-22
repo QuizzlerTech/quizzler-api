@@ -4,6 +4,7 @@ namespace Quizzler_Backend.Models
 {
     public class MediaType
     {
+        [Key]
         public int MediaTypeId { get; set; }
 
         [Required]

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Quizzler_Backend.Controllers.Services;
+using Quizzler_Backend.Services;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -16,6 +17,7 @@ namespace Quizzler_Backend
         {
             var builder = WebApplication.CreateBuilder(args);
             var configuration = builder.Configuration;
+
 
             builder.Services.AddControllers().AddJsonOptions(options =>
             {
@@ -47,6 +49,7 @@ namespace Quizzler_Backend
 
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<LessonService>();
+            builder.Services.AddScoped<GlobalService>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>

@@ -6,7 +6,7 @@ using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Models;
 using System.Security.Claims;
 using Quizzler_Backend.Filters;
-using Microsoft.Extensions.Logging;
+using Quizzler_Backend.Services;
 
 namespace Quizzler_Backend.Controllers
 {
@@ -17,14 +17,16 @@ namespace Quizzler_Backend.Controllers
         private readonly QuizzlerDbContext _context;
         private readonly LessonService _lessonService;
         private readonly UserService _userService;
+        private readonly GlobalService _globalService;
         private readonly ILogger<LessonController> _logger;
 
-        public LessonController(QuizzlerDbContext context, LessonService lessonService, UserService userService, ILogger<LessonController> logger)
+        public LessonController(QuizzlerDbContext context, LessonService lessonService, UserService userService, GlobalService globalService, ILogger<LessonController> logger)
         {
             _context = context;
             _lessonService = lessonService;
             _userService = userService;
             _logger = logger;
+            _globalService = globalService;
         }
 
         // GET: api/lesson/{id}
@@ -41,7 +43,7 @@ namespace Quizzler_Backend.Controllers
         // Method to create new lesson
         [Authorize]
         [HttpPost("add")]
-        public async Task<ActionResult<Lesson>> AddNewLesson(LessonAddDto lessonAddDto)
+        public async Task<ActionResult<Lesson>> AddNewLesson([FromForm] LessonAddDto lessonAddDto)
         {
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == userId);
@@ -49,14 +51,24 @@ namespace Quizzler_Backend.Controllers
             if (_lessonService.TitleExists(lessonAddDto.Title, user)) return BadRequest("User already has this lesson");
             if (!_lessonService.IsTitleCorrect(lessonAddDto.Title)) return BadRequest("Wrong title");
             if (!_lessonService.IsDescriptionCorrect(lessonAddDto.Description)) return BadRequest("Wrong description");
-
+            
             var lesson = await _lessonService.CreateLesson(lessonAddDto, userId, user);
+
+            if (lessonAddDto.Image is not null)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await lessonAddDto.Image.CopyToAsync(memoryStream);
+                    var newMedia = await _globalService.SaveImage(lessonAddDto.Image, _lessonService.GenerateImageName(lessonAddDto.Title), userId);
+                    if (newMedia == null) return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+                    _context.Media.Add(newMedia);
+                }
+            }
+
             _context.Lesson.Add(lesson);
             await _context.SaveChangesAsync();
 
             return new CreatedAtActionResult(nameof(GetLessonById), "Lesson", new { id = lesson.LessonId }, "Created lesson");
         }
-
-
     }
 }

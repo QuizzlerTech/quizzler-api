@@ -4,6 +4,7 @@ namespace Quizzler_Backend.Models
 {
     public class LoginInfo
     {
+        [Key]
         public int UserId { get; set; }
 
         [Required]

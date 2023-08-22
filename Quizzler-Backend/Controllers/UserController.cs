@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Controllers.Services;
 using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Models;
+using Quizzler_Backend.Services;
 using System.Security.Claims;
 
 namespace Quizzler_Backend.Controllers
@@ -14,19 +15,21 @@ namespace Quizzler_Backend.Controllers
     {
         private readonly QuizzlerDbContext _context;
         private readonly UserService _userService;
+        private readonly GlobalService _globalService;
 
         // Controller constructor
-        public UserController(QuizzlerDbContext context, UserService userService)
+        public UserController(QuizzlerDbContext context, UserService userService, GlobalService globalService)
         {
             _context = context;
             _userService = userService;
+            _globalService = globalService;
         }
 
         // GET: api/profile
         // Method to get logged user profile info 
         [Authorize]
         [HttpGet("profile")]
-        public async Task<ActionResult<User>> GetMyProfile()
+        public async Task<ActionResult<User>> GetMyProfile ()
         {
             try
             {
@@ -97,7 +100,7 @@ namespace Quizzler_Backend.Controllers
             user.Email = userUpdateDto.Email ?? user.Email;
             user.FirstName = userUpdateDto.FirstName ?? user.FirstName;
             user.LastName = userUpdateDto.LastName ?? user.LastName;
-            user.LoginInfo.PasswordHash = userUpdateDto.Password != null ? _userService.HashPassword(userUpdateDto.Password, user.LoginInfo.Salt) : user.LoginInfo.PasswordHash;
+            user.LoginInfo.PasswordHash = userUpdateDto.Password != null ? _globalService.HashPassword(userUpdateDto.Password, user.LoginInfo.Salt) : user.LoginInfo.PasswordHash;
 
             _context.SaveChanges();
 

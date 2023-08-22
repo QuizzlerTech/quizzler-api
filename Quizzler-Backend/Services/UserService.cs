@@ -12,6 +12,7 @@ using Isopoh.Cryptography.SecureArray;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Quizzler_Backend.Services;
 
 namespace Quizzler_Backend.Controllers.Services
 {
@@ -20,12 +21,14 @@ namespace Quizzler_Backend.Controllers.Services
         // Field variables
         private readonly QuizzlerDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly GlobalService _globalService;
 
         // Constructor
-        public UserService(QuizzlerDbContext context, IConfiguration configuration)
+        public UserService(QuizzlerDbContext context, IConfiguration configuration, GlobalService globalService)
         {
             _context = context;
             _configuration = configuration;
+            _globalService = globalService;
         }
 
         // Check if email exists in the database
@@ -55,10 +58,10 @@ namespace Quizzler_Backend.Controllers.Services
         }
 
         // Validate if entered login credentials are correct
-        public async Task<bool> AreCredentialsCorrect(UserLoginDto loginDto)
+        public async Task<bool> AreCredentialsCorrect(UserLoginDto userloginDto)
         {
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
-            string generatedPassword = HashPassword(loginDto.Password, user.LoginInfo.Salt);
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == userloginDto.Email);
+            string generatedPassword = _globalService.HashPassword(userloginDto.Password, user.LoginInfo.Salt);
             if (generatedPassword == user.LoginInfo.PasswordHash) return true;
             return false;
         }
@@ -98,41 +101,13 @@ namespace Quizzler_Backend.Controllers.Services
                 Lesson = new List<Lesson>(),
                 LoginInfo = new LoginInfo
                 {
-                    Salt = CreateSalt(),
+                    Salt = _globalService.CreateSalt(),
                 }
 
             };
 
-            user.LoginInfo.PasswordHash = HashPassword(userRegisterDto.Password, user.LoginInfo.Salt);
+            user.LoginInfo.PasswordHash = _globalService.HashPassword(userRegisterDto.Password, user.LoginInfo.Salt);
             return user;
-        }
-
-        // Create a new salt for password hashing
-        public string CreateSalt()
-        {
-            return PasswordGenerator.Generate(length: 16, allowed: Sets.Alphanumerics); // used MlkPwgen
-        }
-
-        // Hash a password using Argon2
-        public string HashPassword(string password, string salt)
-        {
-            var config = new Argon2Config
-            {
-                Type = Argon2Type.DataIndependentAddressing,
-                Version = Argon2Version.Nineteen,
-                MemoryCost = 32768,
-                Threads = Environment.ProcessorCount,
-                Password = Encoding.UTF8.GetBytes(password),
-                Salt = Encoding.UTF8.GetBytes(salt),
-                HashLength = 60
-            };
-
-            var argon2 = new Argon2(config);
-
-            using (SecureArray<byte> hash = argon2.Hash())
-            {
-                return Convert.ToBase64String(hash.Buffer); // used Isopoh.Cryptography.Argon2
-            }
         }
 
         // Generate a JWT token for a user
@@ -154,5 +129,9 @@ namespace Quizzler_Backend.Controllers.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        public static implicit operator UserService(GlobalService v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

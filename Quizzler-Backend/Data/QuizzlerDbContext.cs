@@ -16,8 +16,21 @@ public class QuizzlerDbContext : DbContext
             .HasOne(l => l.User)
             .WithMany(u => u.Lesson)
             .HasForeignKey(l => l.LessonOwner);
+
+        modelBuilder.Entity<Media>()
+            .HasOne(m => m.MediaType)
+            .WithMany()
+            .HasForeignKey(m => m.MediaTypeId);
+
+        modelBuilder.Entity<Media>()
+            .HasOne(m => m.User)
+            .WithMany(u => u.Media)
+            .HasForeignKey(m => m.UploaderId);
+
         base.OnModelCreating(modelBuilder);
     }
+
+
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Quizzler_Backend.Dtos;
+﻿using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Models;
-using System.Reflection.Metadata;
+using Quizzler_Backend.Services;
+using System.Text.RegularExpressions;
 
 namespace Quizzler_Backend.Controllers.Services
 {
@@ -10,12 +10,14 @@ namespace Quizzler_Backend.Controllers.Services
         // Field variables
         private readonly QuizzlerDbContext _context;
         private readonly IConfiguration _configuration;
-
+        private readonly GlobalService _globalService;
+            
         // Constructor
-        public LessonService(QuizzlerDbContext context, IConfiguration configuration)
+        public LessonService(QuizzlerDbContext context, IConfiguration configuration, GlobalService globalService)
         {
             _context = context;
             _configuration = configuration;
+            _globalService = globalService;
         }
 
         // Create a new lesson
@@ -55,7 +57,15 @@ namespace Quizzler_Backend.Controllers.Services
         // Check if the lesson description is in the right format
         public bool IsDescriptionCorrect(string description)
         {
-            return (description.Length <= 150);
+            return (description == null) || (description.Length <= 150);
+        }
+        public string MakeAlphaNumerical(string text)
+        {
+            return Regex.Replace(text, "[^a-zA-Z0-9_.]+", "", RegexOptions.Compiled);
+        }
+        public string GenerateImageName(string title)
+        {
+            return MakeAlphaNumerical(title) + _globalService.CreateSalt() + ".jpeg";
         }
 
     }

@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Quizzler_Backend.Models
 {
     public class Media
     {
+        [Key]
         public int MediaId { get; set; }
 
         [Required]
@@ -19,7 +21,9 @@ namespace Quizzler_Backend.Models
         [Required]
         public long FileSize { get; set; }
 
+        [ForeignKey("MediaTypeId")]
         public MediaType MediaType { get; set; }
+        [ForeignKey("UploaderId")]
         public User User { get; set; }
     }
 }

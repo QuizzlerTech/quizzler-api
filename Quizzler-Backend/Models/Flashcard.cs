@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Quizzler_Backend.Models
 {
     public class Flashcard
     {
+        [Key]
         public int FlashcardId { get; set; }
 
         [Required]
