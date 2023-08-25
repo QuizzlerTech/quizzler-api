@@ -12,7 +12,7 @@ namespace Quizzler_Backend.Models
         public int OwnerId { get; set; }
 
         [Required]
-        public bool IsPublic { get; set; }
+        public bool IsPublic { get; set; } = true;
 
         [Required]
         [StringLength(40)]
@@ -29,7 +29,7 @@ namespace Quizzler_Backend.Models
         [ForeignKey("OwnerId")]
         public virtual User Owner { get; set; }
         [ForeignKey("LessonMediaId")]
-        public virtual Media Media { get; set; }
+        public virtual Media? Media { get; set; }
     }
 }
 

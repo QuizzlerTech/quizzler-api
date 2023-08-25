@@ -2,6 +2,9 @@
 using Quizzler_Backend.Models;
 using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore.Proxies;
+using MySql.EntityFrameworkCore;
+using MySql.Data.MySqlClient;
+
 public class QuizzlerDbContext : DbContext
 {
     public QuizzlerDbContext(DbContextOptions<QuizzlerDbContext> options)
@@ -11,30 +14,150 @@ public class QuizzlerDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>().OwnsOne(u => u.LoginInfo);
-        modelBuilder.Entity<Lesson>()
-            .HasOne(l => l.Owner)
-            .WithMany(u => u.Lesson)
-            .HasForeignKey(l => l.OwnerId);
+        // User Configuration
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.UserId);
+            entity.Property(e => e.Username).HasMaxLength(32).IsRequired();
+            entity.Property(e => e.Email).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.FirstName).HasMaxLength(20);
+            entity.Property(e => e.LastName).HasMaxLength(20);
+            entity.Property(e => e.DateRegistered).IsRequired();
+            entity.Property(e => e.Avatar).IsRequired().HasDefaultValue(1);
+            entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => e.Username).IsUnique();
+        });
 
-        modelBuilder.Entity<Media>()
-            .HasOne(m => m.MediaType)
-            .WithMany()
-            .HasForeignKey(m => m.MediaTypeId);
+        // Quiz Configuration
+        modelBuilder.Entity<Quiz>(entity =>
+        {
+            entity.HasKey(e => e.QuizId);
+            entity.Property(e => e.QuizOwner).IsRequired();
+            entity.Property(e => e.Title).HasMaxLength(40).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(150).IsRequired();
+            entity.Property(e => e.IsPublic).IsRequired();
+            entity.Property(e => e.DateCreated).IsRequired();
+            entity.HasOne(e => e.Owner)
+                  .WithMany()
+                  .HasForeignKey(e => e.QuizOwner);
 
-        modelBuilder.Entity<Media>()
-            .HasOne(m => m.Uploader)
-            .WithMany(u => u.Media)
-            .HasForeignKey(m => m.UploaderId);
+            entity.HasMany(quiz => quiz.Questions)
+                .WithOne(q => q.Quiz)
+                .HasForeignKey(q => q.QuizId);
+        });
 
-        base.OnModelCreating(modelBuilder);
+
+        // Question Configuration
+        modelBuilder.Entity<Question>(entity =>
+        {
+            entity.HasKey(e => e.QuestionId);
+            entity.Property(e => e.QuizId).IsRequired();
+            entity.Property(e => e.QuestionText).HasMaxLength(255).IsRequired();
+            entity.HasOne(e => e.Media)
+                  .WithMany()
+                  .HasForeignKey(e => e.QuestionMediaId);
+            entity.HasMany(question => question.Answers)
+                .WithOne(q => q.Question)
+                .HasForeignKey(q => q.QuestionId);
+        });
+
+        // MediaType Configuration
+        modelBuilder.Entity<MediaType>(entity =>
+        {
+            entity.HasKey(e => e.MediaTypeId);
+            entity.Property(e => e.Extension).HasMaxLength(10).IsRequired();
+            entity.Property(e => e.TypeName).IsRequired();
+            entity.Property(e => e.MaxSize).IsRequired();
+        });
+
+        // Media Configuration
+        modelBuilder.Entity<Media>(entity =>
+        {
+            entity.HasKey(e => e.MediaId);
+            entity.Property(e => e.MediaTypeId).IsRequired();
+            entity.Property(e => e.UploaderId).IsRequired();
+            entity.Property(e => e.Path).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.FileSize).IsRequired();
+            entity.HasOne(e => e.MediaType)
+                  .WithMany()
+                  .HasForeignKey(e => e.MediaTypeId);
+            entity.HasOne(e => e.Uploader)
+                  .WithMany()
+                  .HasForeignKey(e => e.UploaderId);
+
+        });
+
+        // LoginInfo Configuration
+        modelBuilder.Entity<LoginInfo>(entity =>
+        {
+            entity.HasKey(e => e.UserId);
+            entity.Property(e => e.PasswordHash).HasMaxLength(80);
+            entity.Property(e => e.Salt).HasMaxLength(128).IsRequired();
+        });
+
+        // Lesson Configuration
+        modelBuilder.Entity<Lesson>(entity =>
+        {
+            entity.HasKey(e => e.LessonId);
+            entity.Property(e => e.OwnerId).IsRequired();
+
+            entity.Property(e => e.Title).HasMaxLength(40).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(150).HasDefaultValue("My lesson");
+            entity.Property(e => e.DateCreated).IsRequired();
+
+            entity.Property(e => e.IsPublic)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            entity.HasMany(l => l.Flashcards)
+                .WithOne(f => f.Lesson)
+                .HasForeignKey(f => f.LessonId);
+
+            entity.HasOne(e => e.Owner)
+                  .WithMany()
+                  .HasForeignKey(e => e.OwnerId);
+
+            entity.HasOne(l => l.Media)
+                .WithMany()
+                .HasForeignKey(l => l.LessonMediaId);
+        });
+
+        // Flashcard Configuration
+        modelBuilder.Entity<Flashcard>(entity =>
+        {
+            entity.HasKey(e => e.FlashcardId);
+            entity.Property(e => e.LessonId).IsRequired();
+            entity.Property(e => e.DateCreated).IsRequired();
+            entity.Property(e => e.QuestionText).HasMaxLength(200);
+            entity.Property(e => e.AnswerText).HasMaxLength(200);
+            entity.HasOne(l => l.AnswerMedia)
+                .WithMany()
+                .HasForeignKey(l => l.AnswerMediaId);
+
+            entity.HasOne(l => l.QuestionMedia)
+                .WithMany()
+                .HasForeignKey(l => l.QuestionMediaId);
+        });
+
+        // Answer Configuration
+        modelBuilder.Entity<Answer>(entity =>
+        {
+            entity.HasKey(e => e.AnswerId);
+            entity.Property(e => e.QuestionId).IsRequired();
+            entity.Property(e => e.AnswerText).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.IsCorrect).IsRequired();
+            entity.HasOne(l => l.Media)
+                .WithMany()
+                .HasForeignKey(l => l.AnswerMediaId);
+        });
     }
 
 
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseMySql(Environment.GetEnvironmentVariable("DbConnection"), new MySqlServerVersion(new Version(8, 0, 21)));
+        optionsBuilder.UseLazyLoadingProxies();
+        optionsBuilder.UseMySQL(Environment.GetEnvironmentVariable("DbConnection"));
     }
 
     public DbSet<User> User { get; set; }

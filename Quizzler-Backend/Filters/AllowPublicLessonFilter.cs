@@ -35,6 +35,7 @@ namespace Quizzler_Backend.Filters
             {
                 var userId = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var isOwner = lesson.OwnerId.ToString() == userId;
+
                 if (!lesson.IsPublic && !context.HttpContext.User.Identity.IsAuthenticated && !isOwner)
                 {
                     // If the lesson is not public and the user is not authenticated, return a 401 Unauthorized response with a message

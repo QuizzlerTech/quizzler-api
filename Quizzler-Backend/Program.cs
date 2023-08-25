@@ -45,7 +45,7 @@ namespace Quizzler_Backend
             });
 
             builder.Services.AddDbContext<QuizzlerDbContext>(options =>
-                options.UseMySql(configuration["DbConnection"], new MySqlServerVersion(new Version(8, 0, 21))));
+                options.UseMySQL(configuration["DbConnection"]));
 
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<LessonService>();
