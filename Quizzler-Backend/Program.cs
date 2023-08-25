@@ -54,7 +54,7 @@ namespace Quizzler_Backend
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Quizzler Swagger", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Quizzler Swagger", Version = "v1.1" });
 
                 // Define the BearerAuth scheme
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
