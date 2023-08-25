@@ -1,6 +1,5 @@
 ﻿using Isopoh.Cryptography.Argon2;
 using Isopoh.Cryptography.SecureArray;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MlkPwgen;
 using Quizzler_Backend.Controllers;
