@@ -190,8 +190,6 @@ namespace Quizzler_Backend.Controllers
             {
                 return NotFound("No user found");
             }
-
-
         }
     }
 

@@ -63,10 +63,5 @@ namespace Quizzler_Backend.Controllers.Services
         {
             return MakeAlphaNumerical(title) + _globalService.CreateSalt() + ".jpeg";
         }
-        public bool isItUssersLesson(string userId, Lesson lesson)
-        {
-            return lesson.OwnerId.ToString() == userId;
-        }
-
     }
 }

@@ -44,7 +44,7 @@ namespace Quizzler_Backend.Services
                 Media media = new Media();
                 media.MediaTypeId = (await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image")).MediaTypeId;
                 media.UploaderId = uploaderId;
-                media.Path = outputPath.Remove(0,8);
+                media.Path = outputPath.Remove(0, 8);
                 media.FileSize = file.Length;
 
                 return media;
@@ -79,6 +79,10 @@ namespace Quizzler_Backend.Services
         public string CreateSalt()
         {
             return PasswordGenerator.Generate(length: 16, allowed: Sets.Alphanumerics); // used MlkPwgen
+        }
+        public bool isItUssersLesson(string userId, Lesson lesson)
+        {
+            return lesson.OwnerId.ToString() == userId;
         }
     }
 }

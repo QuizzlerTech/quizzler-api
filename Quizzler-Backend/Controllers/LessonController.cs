@@ -72,7 +72,7 @@ namespace Quizzler_Backend.Controllers
             return new CreatedAtActionResult(nameof(GetLessonById), "Lesson", new { id = lesson.LessonId }, $"Created lesson {lesson.LessonId}");
         }        
         // POST: api/lesson/update
-        // Method to create new lesson
+        // Method to update a lesson
         [Authorize]
         [HttpPatch("update")]
         public async Task<ActionResult<Lesson>> UpdateLesson([FromForm] LessonUpdateDto lessonUpdateDto)
@@ -111,7 +111,7 @@ namespace Quizzler_Backend.Controllers
             var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId.ToString() == lessonId) ;
             try
             {
-                if (!_lessonService.isItUssersLesson(userId, lesson)) return Unauthorized("Not user's lesson");
+                if (!_globalService.isItUssersLesson(userId, lesson)) return Unauthorized("Not user's lesson");
                 // Removes lesson from the database and save changes
                 _context.Lesson.Remove(lesson);
                 await _context.SaveChangesAsync();
