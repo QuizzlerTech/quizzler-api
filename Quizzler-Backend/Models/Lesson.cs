@@ -20,7 +20,7 @@ namespace Quizzler_Backend.Models
 
         [Required]
         [StringLength(150)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public DateTime DateCreated { get; set; }
         public int? LessonMediaId { get; set; } = null;

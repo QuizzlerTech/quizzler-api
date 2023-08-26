@@ -14,20 +14,20 @@ namespace Quizzler_Backend.Models
         public DateTime DateCreated { get; set; }
 
         [StringLength(200)]
-        public string QuestionText { get; set; }
+        public string? QuestionText { get; set; }
 
         public int? QuestionMediaId { get; set; }
 
         [StringLength(200)]
-        public string AnswerText { get; set; }
+        public string? AnswerText { get; set; }
 
         public int? AnswerMediaId { get; set; }
 
         [ForeignKey("LessonId")]
         public virtual Lesson Lesson { get; set; }
         [ForeignKey("QuestionMediaId")]
-        public virtual Media QuestionMedia { get; set; }
+        public virtual Media? QuestionMedia { get; set; }
         [ForeignKey("AnswerMediaId")]
-        public virtual Media AnswerMedia { get; set; }
+        public virtual Media? AnswerMedia { get; set; }
     }
 }

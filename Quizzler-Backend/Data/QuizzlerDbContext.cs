@@ -34,7 +34,7 @@ public class QuizzlerDbContext : DbContext
             entity.HasKey(e => e.QuizId);
             entity.Property(e => e.QuizOwner).IsRequired();
             entity.Property(e => e.Title).HasMaxLength(40).IsRequired();
-            entity.Property(e => e.Description).HasMaxLength(150).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(150);
             entity.Property(e => e.IsPublic).IsRequired();
             entity.Property(e => e.DateCreated).IsRequired();
             entity.HasOne(e => e.Owner)
@@ -52,7 +52,7 @@ public class QuizzlerDbContext : DbContext
         {
             entity.HasKey(e => e.QuestionId);
             entity.Property(e => e.QuizId).IsRequired();
-            entity.Property(e => e.QuestionText).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.QuestionText).HasMaxLength(255);
             entity.HasOne(e => e.Media)
                   .WithMany()
                   .HasForeignKey(e => e.QuestionMediaId);
@@ -102,7 +102,7 @@ public class QuizzlerDbContext : DbContext
             entity.Property(e => e.OwnerId).IsRequired();
 
             entity.Property(e => e.Title).HasMaxLength(40).IsRequired();
-            entity.Property(e => e.Description).HasMaxLength(150).HasDefaultValue("My lesson");
+            entity.Property(e => e.Description).HasMaxLength(150);
             entity.Property(e => e.DateCreated).IsRequired();
 
             entity.Property(e => e.IsPublic)
@@ -144,7 +144,7 @@ public class QuizzlerDbContext : DbContext
         {
             entity.HasKey(e => e.AnswerId);
             entity.Property(e => e.QuestionId).IsRequired();
-            entity.Property(e => e.AnswerText).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.AnswerText).HasMaxLength(255);
             entity.Property(e => e.IsCorrect).IsRequired();
             entity.HasOne(l => l.Media)
                 .WithMany()

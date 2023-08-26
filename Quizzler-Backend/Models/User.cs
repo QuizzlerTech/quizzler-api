@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Quizzler_Backend.Models
 {
@@ -28,7 +29,8 @@ namespace Quizzler_Backend.Models
 
         public int Avatar { get; set; } = 1;
         public virtual List<Lesson> Lesson { get; set; } = new List<Lesson>();
-        public virtual List<Media> Media { get; set; } = new List<Media>();
+        public virtual List<Media> Media { get; set; } = new List<Media>(); 
+        [JsonIgnore]
         public virtual LoginInfo LoginInfo { get; set; }
 
     }

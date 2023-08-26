@@ -13,7 +13,7 @@ namespace Quizzler_Backend.Models
 
         [Required]
         [StringLength(255)]
-        public string QuestionText { get; set; }
+        public string? QuestionText { get; set; }
 
         public int? QuestionMediaId { get; set; }
 

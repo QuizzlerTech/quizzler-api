@@ -12,7 +12,7 @@ namespace Quizzler_Backend.Models
 
         [Required]
         [StringLength(255)]
-        public string AnswerText { get; set; }
+        public string? AnswerText { get; set; }
 
         [Required]
         public bool IsCorrect { get; set; }

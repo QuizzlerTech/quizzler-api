@@ -50,6 +50,7 @@ namespace Quizzler_Backend
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<LessonService>();
             builder.Services.AddScoped<GlobalService>();
+            builder.Services.AddScoped<FlashcardService>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>

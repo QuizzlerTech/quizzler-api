@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Quizzler_Backend.Migrations
 {
     [DbContext(typeof(QuizzlerDbContext))]
-    partial class QuizzlerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230826134630_nullablePropsFix")]
+    partial class nullablePropsFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,6 +60,7 @@ namespace Quizzler_Backend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("AnswerMediaId")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<string>("AnswerText")
@@ -70,6 +74,7 @@ namespace Quizzler_Backend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("QuestionMediaId")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<string>("QuestionText")
@@ -333,7 +338,9 @@ namespace Quizzler_Backend.Migrations
                 {
                     b.HasOne("Quizzler_Backend.Models.Media", "AnswerMedia")
                         .WithMany()
-                        .HasForeignKey("AnswerMediaId");
+                        .HasForeignKey("AnswerMediaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Quizzler_Backend.Models.Lesson", "Lesson")
                         .WithMany("Flashcards")
@@ -343,7 +350,9 @@ namespace Quizzler_Backend.Migrations
 
                     b.HasOne("Quizzler_Backend.Models.Media", "QuestionMedia")
                         .WithMany()
-                        .HasForeignKey("QuestionMediaId");
+                        .HasForeignKey("QuestionMediaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("AnswerMedia");
 

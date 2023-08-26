@@ -1,11 +1,8 @@
 ﻿using Isopoh.Cryptography.Argon2;
 using Isopoh.Cryptography.SecureArray;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MlkPwgen;
-using Quizzler_Backend.Controllers;
 using Quizzler_Backend.Models;
-
 using SixLabors.ImageSharp.Formats.Jpeg;
 using System.Text;
 
@@ -15,12 +12,10 @@ namespace Quizzler_Backend.Services
     public class GlobalService
     {
         private readonly QuizzlerDbContext _context;
-        private readonly ILogger<LessonController> _logger;
 
-        public GlobalService(QuizzlerDbContext context, ILogger<LessonController> logger)
+        public GlobalService(QuizzlerDbContext context)
         {
             _context = context;
-            _logger = logger;
         }
 
         public async Task<Media> SaveImage(IFormFile file, string fileName, int uploaderId)
@@ -49,14 +44,13 @@ namespace Quizzler_Backend.Services
                 Media media = new Media();
                 media.MediaTypeId = (await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image")).MediaTypeId;
                 media.UploaderId = uploaderId;
-                media.Path = outputPath;
+                media.Path = outputPath.Remove(0,8);
                 media.FileSize = file.Length;
 
                 return media;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving image");
                 return null;
             }
         }

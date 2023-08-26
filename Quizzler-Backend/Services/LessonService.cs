@@ -8,15 +8,11 @@ namespace Quizzler_Backend.Controllers.Services
     public class LessonService
     {        
         // Field variables
-        private readonly QuizzlerDbContext _context;
-        private readonly IConfiguration _configuration;
         private readonly GlobalService _globalService;
             
         // Constructor
-        public LessonService(QuizzlerDbContext context, IConfiguration configuration, GlobalService globalService)
+        public LessonService(QuizzlerDbContext context, GlobalService globalService)
         {
-            _context = context;
-            _configuration = configuration;
             _globalService = globalService;
         }
 
@@ -66,6 +62,10 @@ namespace Quizzler_Backend.Controllers.Services
         public string GenerateImageName(string title)
         {
             return MakeAlphaNumerical(title) + _globalService.CreateSalt() + ".jpeg";
+        }
+        public bool isItUssersLesson(string userId, Lesson lesson)
+        {
+            return lesson.OwnerId.ToString() == userId;
         }
 
     }

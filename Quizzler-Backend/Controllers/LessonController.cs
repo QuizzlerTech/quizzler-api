@@ -60,7 +60,7 @@ namespace Quizzler_Backend.Controllers
                 {
                     await lessonAddDto.Image.CopyToAsync(memoryStream);
                     var newMedia = await _globalService.SaveImage(lessonAddDto.Image, _lessonService.GenerateImageName(lessonAddDto.Title), userId);
-                    if (newMedia == null) return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+                    if (newMedia == null) return StatusCode(500, "Error saving image");
                     _context.Media.Add(newMedia);
                     lesson.Media = newMedia;
                 }
@@ -69,7 +69,7 @@ namespace Quizzler_Backend.Controllers
             _context.Lesson.Add(lesson);
             await _context.SaveChangesAsync();
 
-            return new CreatedAtActionResult(nameof(GetLessonById), "Lesson", new { id = lesson.LessonId }, "Created lesson");
+            return new CreatedAtActionResult(nameof(GetLessonById), "Lesson", new { id = lesson.LessonId }, $"Created lesson {lesson.LessonId}");
         }        
         // POST: api/lesson/update
         // Method to create new lesson
@@ -100,6 +100,28 @@ namespace Quizzler_Backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok("Lesson updated");
+        }
+        // DELETE: api/lesson/delete
+        // Method to delete a lesson
+        [Authorize]
+        [HttpDelete("delete")]
+        public async Task<ActionResult<Lesson>> Delete(string lessonId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId.ToString() == lessonId) ;
+            try
+            {
+                if (!_lessonService.isItUssersLesson(userId, lesson)) return Unauthorized("Not user's lesson");
+                // Removes lesson from the database and save changes
+                _context.Lesson.Remove(lesson);
+                await _context.SaveChangesAsync();
+                return Ok("Lesson deleted successfully.");
+
+            }
+            catch (Exception ex)
+            {
+                return NotFound("No lesson found");
+            }
         }
     }
 }

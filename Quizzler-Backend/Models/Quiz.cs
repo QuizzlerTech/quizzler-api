@@ -17,7 +17,7 @@ namespace Quizzler_Backend.Models
 
         [Required]
         [StringLength(150)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Required]
         public bool IsPublic { get; set; }
