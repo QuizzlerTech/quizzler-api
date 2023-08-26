@@ -15,7 +15,8 @@
 
 # Mono auto generated files
 mono_crash.*
-
+bin
+Quizzler-Backend/bin/*
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

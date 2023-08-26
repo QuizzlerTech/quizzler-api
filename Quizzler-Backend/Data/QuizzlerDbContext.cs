@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Models;
-using MySqlConnector;
+using System.Reflection.Emit;
+using Microsoft.EntityFrameworkCore.Proxies;
+using MySql.EntityFrameworkCore;
+using MySql.Data.MySqlClient;
 
 public class QuizzlerDbContext : DbContext
 {
