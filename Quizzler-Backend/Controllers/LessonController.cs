@@ -70,7 +70,7 @@ namespace Quizzler_Backend.Controllers
             await _context.SaveChangesAsync();
 
             return new CreatedAtActionResult(nameof(GetLessonById), "Lesson", new { id = lesson.LessonId }, $"Created lesson {lesson.LessonId}");
-        }        
+        }
         // POST: api/lesson/update
         // Method to update a lesson
         [Authorize]
@@ -80,12 +80,20 @@ namespace Quizzler_Backend.Controllers
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == userId);
             var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId == lessonUpdateDto.LessonId);
-            
-            if (!(userId == lesson.OwnerId)) return Unauthorized("User is not the owner");
-            if (_lessonService.TitleExists(lessonUpdateDto.Title, user)) return BadRequest("User already has this lesson");
-            if (!_lessonService.IsTitleCorrect(lessonUpdateDto.Title)) return BadRequest("Wrong title");
-            if (!_lessonService.IsDescriptionCorrect(lessonUpdateDto.Description)) return BadRequest("Wrong description");
 
+            if (!(userId == lesson.OwnerId)) return Unauthorized("User is not the owner");
+            if (lessonUpdateDto.Title is not null)
+            {
+                if (_lessonService.TitleExists(lessonUpdateDto.Title, user)) return BadRequest("User already has this lesson");
+                if (!_lessonService.IsTitleCorrect(lessonUpdateDto.Title)) return BadRequest("Wrong title");
+                lesson.Title = lessonUpdateDto.Title;
+            }
+            if (lessonUpdateDto.Description is not null)
+            {
+                if (!_lessonService.IsDescriptionCorrect(lessonUpdateDto.Description)) return BadRequest("Wrong description");
+                lesson.Description = lessonUpdateDto.Description;
+            }
+            lesson.IsPublic = lessonUpdateDto.IsPublic ?? lesson.IsPublic;
 
             if (lessonUpdateDto.Image is not null)
             {
@@ -94,9 +102,11 @@ namespace Quizzler_Backend.Controllers
                     await lessonUpdateDto.Image.CopyToAsync(memoryStream);
                     var newMedia = await _globalService.SaveImage(lessonUpdateDto.Image, _lessonService.GenerateImageName(lessonUpdateDto.Title), userId);
                     if (newMedia == null) return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+                    lesson.Media = newMedia;
                     _context.Media.Add(newMedia);
                 }
             }
+
             await _context.SaveChangesAsync();
 
             return Ok("Lesson updated");
