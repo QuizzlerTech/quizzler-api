@@ -43,20 +43,6 @@ namespace Quizzler_Backend.Controllers.Services
             return await _context.User.AnyAsync(u => u.Username == username);
         }
 
-        // Check if user exists (by username or email)
-        public async Task<bool> DoesExist(string email)
-        {
-            try
-            {
-                email = new MailAddress(email).Address;
-                return true;
-            }
-            catch (FormatException)
-            {
-                return false;
-            }
-        }
-
         // Validate if entered login credentials are correct
         public async Task<bool> AreCredentialsCorrect(UserLoginDto userloginDto)
         {

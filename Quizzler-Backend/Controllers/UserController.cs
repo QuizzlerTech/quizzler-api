@@ -159,7 +159,7 @@ namespace Quizzler_Backend.Controllers
         public async Task<ActionResult<User>> Login(UserLoginDto userLoginDto)
         {
             // Checks if the user exists
-            if (!await _userService.DoesExist(userLoginDto.Email)) return StatusCode(409, $"{userLoginDto.Email} is not registered");
+            if (!await _userService.EmailExists(userLoginDto.Email)) return StatusCode(409, $"{userLoginDto.Email} is not registered");
             // Checks if the login credentials are incorrect
             if (!await _userService.AreCredentialsCorrect(userLoginDto)) return StatusCode(400, $"Wrong credentials");
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == userLoginDto.Email);

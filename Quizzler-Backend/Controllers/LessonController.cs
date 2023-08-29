@@ -53,7 +53,7 @@ namespace Quizzler_Backend.Controllers
             if (!_lessonService.IsDescriptionCorrect(lessonAddDto.Description)) return BadRequest("Wrong description");
             
             var lesson = await _lessonService.CreateLesson(lessonAddDto, userId, user);
-
+  
             if (lessonAddDto.Image is not null)
             {
                 using (var memoryStream = new MemoryStream())
@@ -71,6 +71,8 @@ namespace Quizzler_Backend.Controllers
 
             return new CreatedAtActionResult(nameof(GetLessonById), "Lesson", new { id = lesson.LessonId }, $"Created lesson {lesson.LessonId}");
         }
+
+
         // POST: api/lesson/update
         // Method to update a lesson
         [Authorize]
@@ -80,6 +82,7 @@ namespace Quizzler_Backend.Controllers
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == userId);
             var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId == lessonUpdateDto.LessonId);
+            var imageMediaType = await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image");
 
             if (!(userId == lesson.OwnerId)) return Unauthorized("User is not the owner");
             if (lessonUpdateDto.Title is not null)
@@ -97,10 +100,12 @@ namespace Quizzler_Backend.Controllers
 
             if (lessonUpdateDto.Image is not null)
             {
+      
+                if (lessonUpdateDto.Image.Length > imageMediaType.MaxSize) return BadRequest("The image is too large"); 
                 using (var memoryStream = new MemoryStream())
                 {
                     await lessonUpdateDto.Image.CopyToAsync(memoryStream);
-                    var newMedia = await _globalService.SaveImage(lessonUpdateDto.Image, _lessonService.GenerateImageName(lessonUpdateDto.Title), userId);
+                    var newMedia = await _globalService.SaveImage(lessonUpdateDto.Image, _lessonService.GenerateImageName(lesson.Title), userId);
                     if (newMedia == null) return new StatusCodeResult(StatusCodes.Status500InternalServerError);
                     lesson.Media = newMedia;
                     _context.Media.Add(newMedia);

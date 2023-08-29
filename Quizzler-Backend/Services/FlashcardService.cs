@@ -31,7 +31,5 @@ namespace Quizzler_Backend.Services
             return _globalService.CreateSalt() + ".jpeg";
         }
 
-
-
     }
 }

@@ -40,6 +40,9 @@ namespace Quizzler_Backend.Controllers
             if (!(lessonToAddTo.OwnerId == userId)) return Unauthorized("User is not the owner of the lesson");
             var newFlaschard = await _flashcardService.createNewFlashcard(flashcardAddDto);
 
+            if (flashcardAddDto.QuestionText == null && flashcardAddDto.QuestionImage == null) return BadRequest("No question text nor image");
+            if (flashcardAddDto.AnswerText == null && flashcardAddDto.AnswerImage == null) return BadRequest("No answer text nor image");
+
             if (flashcardAddDto.QuestionImage is not null)
             {
                 using (var memoryStream = new MemoryStream())
@@ -103,6 +106,8 @@ namespace Quizzler_Backend.Controllers
                     flashcard.AnswerMedia = newMedia;
                 }
             }
+            if (flashcard.QuestionText == null && flashcard.QuestionMedia == null) return BadRequest("No question text nor image after the update");
+            if (flashcard.AnswerText == null && flashcard.AnswerMedia== null) return BadRequest("No answer text nor image after the update");
 
             _context.Flashcard.Update(flashcard);
             await _context.SaveChangesAsync();

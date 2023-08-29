@@ -20,6 +20,7 @@ namespace Quizzler_Backend.Services
 
         public async Task<Media> SaveImage(IFormFile file, string fileName, int uploaderId)
         {
+            var imageMediaType = await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image");
             if (file == null || file.Length == 0)
             {
                 return null;
@@ -37,12 +38,12 @@ namespace Quizzler_Backend.Services
                             Mode = ResizeMode.Max
                         }));
 
-                        await image.SaveAsync(outputPath, new JpegEncoder { Quality = 70 });
+                        await image.SaveAsync(outputPath, new JpegEncoder { Quality = 80 });
                     }
                 }
 
                 Media media = new Media();
-                media.MediaTypeId = (await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image")).MediaTypeId;
+                media.MediaTypeId = imageMediaType.MediaTypeId;
                 media.UploaderId = uploaderId;
                 media.Path = outputPath.Remove(0, 8);
                 media.FileSize = file.Length;
