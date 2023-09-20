@@ -12,7 +12,7 @@ namespace Quizzler_Backend.Models
         public int OwnerId { get; set; }
 
         [Required]
-        public bool IsPublic { get; set; } = true;
+        public bool IsPublic { get; set; }
 
         [Required]
         [StringLength(40)]

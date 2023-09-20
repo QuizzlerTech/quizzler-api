@@ -30,15 +30,12 @@ namespace Quizzler_Backend
 
 
 
-            builder.Services.AddControllers().AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-            });
+            builder.Services.AddControllers();
+
             builder.Services.Configure<KestrelServerOptions>(options =>
             {
                 options.AllowSynchronousIO = true;
             });
-
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -96,12 +93,7 @@ namespace Quizzler_Backend
 
             var app = builder.Build();
 
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
-            }
-    
+            app.UseHsts();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {

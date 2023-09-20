@@ -44,7 +44,6 @@ namespace Quizzler_Backend.Controllers
 
         // GET: api/user/{id}/profile
         // Method to get profile info 
-        [Authorize]
         [HttpGet("{id}/profile")]
         public async Task<ActionResult<User>> GetUserProfileById(int id)
         {
@@ -63,6 +62,7 @@ namespace Quizzler_Backend.Controllers
             };
             return Ok(result);
         }
+
         // GET: api/user/check
         // Method to validate JSON Web Token
         [Authorize]
@@ -75,6 +75,42 @@ namespace Quizzler_Backend.Controllers
             await _context.SaveChangesAsync();
             return Ok("You are authorized!");
         }
+
+        // GET: api/lessons
+        // Method to get logged user lessons info 
+        [Authorize]
+        [HttpGet("lessons")]
+        public async Task<ActionResult<ICollection<LessonSendDto>>> GetMyLessons()
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                return await GetUserLessonsById(Convert.ToInt32(userId));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        // GET: api/user/{id}/lessons
+        // Method to get lessons info 
+        [HttpGet("{id}/lessons")]
+        public async Task<ActionResult<ICollection<LessonSendDto>>> GetUserLessonsById(int id)
+        {
+            var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == id);
+            if (user == null) return NotFound("No user found");
+
+            bool isItLoggedUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == id.ToString();
+            var result = user.Lesson
+                             .Where(l => l.IsPublic || isItLoggedUser)
+                             .Select(l => new LessonSendDto { LessonId = l.LessonId, Title = l.Title, Description = l.Description, ImagePath = l.Media?.Path})
+                             .ToList();
+
+            return Ok(result.Count == 0 ? new List<LessonSendDto>() : result);
+        }
+
 
         // POST: api/user/register
         // Method to register a new user
@@ -119,12 +155,13 @@ namespace Quizzler_Backend.Controllers
         [HttpPatch("update")]
         public async Task<ActionResult<User>> UpdateUser(UserUpdateDto userUpdateDto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; 
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() ==userId);
 
             if (!await _userService.AreCredentialsCorrect(new UserLoginDto { Email = user.Email, Password = userUpdateDto.CurrentPassword })) return StatusCode(400, $"Wrong credentials");
 
             // Checks if the email or username already exists
+            if (userUpdateDto.Email == "") return StatusCode(400, $"Email cannot be empty (dont send email or send a new one)"); 
             if (userUpdateDto.Email is not null)
             {
                 if (await _userService.EmailExists(userUpdateDto.Email) && !(userUpdateDto.Email == user.Email)) return StatusCode(409, $"Email {userUpdateDto.Email} already registered");

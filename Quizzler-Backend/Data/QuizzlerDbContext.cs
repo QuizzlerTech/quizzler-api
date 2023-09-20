@@ -106,8 +106,7 @@ public class QuizzlerDbContext : DbContext
             entity.Property(e => e.DateCreated).IsRequired();
 
             entity.Property(e => e.IsPublic)
-                .IsRequired()
-                .HasDefaultValue(true);
+                .IsRequired();
 
             entity.HasMany(l => l.Flashcards)
                 .WithOne(f => f.Lesson)

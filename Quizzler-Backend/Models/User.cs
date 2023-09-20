@@ -28,7 +28,9 @@ namespace Quizzler_Backend.Models
         public DateTime LastSeen { get; set; }
 
         public int Avatar { get; set; } = 1;
+        [JsonIgnore]
         public virtual List<Lesson> Lesson { get; set; } = new List<Lesson>();
+        [JsonIgnore]
         public virtual List<Media> Media { get; set; } = new List<Media>(); 
         [JsonIgnore]
         public virtual LoginInfo LoginInfo { get; set; }
