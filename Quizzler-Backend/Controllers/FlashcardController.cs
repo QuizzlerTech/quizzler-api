@@ -30,6 +30,7 @@ namespace Quizzler_Backend.Controllers
         }
         // POST: api/flashcard/add
         // Method to create new flashcard
+      
         [Authorize]
         [HttpPost("add")]
         public async Task<ActionResult<Flashcard>> AddNewFlashcard([FromForm] FlashcardAddDto flashcardAddDto)
@@ -73,8 +74,10 @@ namespace Quizzler_Backend.Controllers
         }
         // PATCH: api/flashcard/update
         // Method to update a flashcard
+      
         [Authorize]
         [HttpPatch("update")]
+
         public async Task<ActionResult<Flashcard>> UpdateFlashcard([FromForm] FlashcardUpdateDto flashcardUpdateDto)
         {
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);

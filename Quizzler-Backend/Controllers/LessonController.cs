@@ -41,6 +41,7 @@ namespace Quizzler_Backend.Controllers
 
         // POST: api/lesson/add
         // Method to create new lesson
+      
         [Authorize]
         [HttpPost("add")]
         public async Task<ActionResult<Lesson>> AddNewLesson([FromForm] LessonAddDto lessonAddDto)
@@ -75,6 +76,7 @@ namespace Quizzler_Backend.Controllers
 
         // POST: api/lesson/update
         // Method to update a lesson
+      
         [Authorize]
         [HttpPatch("update")]
         public async Task<ActionResult<Lesson>> UpdateLesson([FromForm] LessonUpdateDto lessonUpdateDto)

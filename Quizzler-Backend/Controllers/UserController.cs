@@ -63,7 +63,56 @@ namespace Quizzler_Backend.Controllers
             };
             return Ok(result);
         }
+        // GET: api/user/check
+        // Method to validate JSON Web Token
+        [Authorize]
+        [HttpGet("check")]
+        public async Task<ActionResult<User>> CheckAuth()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+            user.LastSeen = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return Ok("You are authorized!");
+        }
 
+        // POST: api/user/register
+        // Method to register a new user
+        [HttpPost("register")]
+        public async Task<ActionResult<User>> Register(UserRegisterDto userRegisterDto)
+        {
+            // Checks if the email or username already exists
+            if (await _userService.EmailExists(userRegisterDto.Email)) return StatusCode(409, $"Email {userRegisterDto.Email} already registered");
+            if (await _userService.UsernameExists(userRegisterDto.Username)) return StatusCode(409, $"Username {userRegisterDto.Username} already registered");
+            // Checks if the email is correct
+            if (!_userService.IsEmailCorrect(userRegisterDto.Email)) return StatusCode(422, $"Email {userRegisterDto.Email} is not a proper email address");
+            // Checks if the password meets the criteria
+            if (!_userService.IsPasswordGoodEnough(userRegisterDto.Password)) return StatusCode(422, $"Password does not meet the requirements");
+
+            var user = await _userService.CreateUser(userRegisterDto);
+            _context.User.Add(user);
+
+            await _context.SaveChangesAsync();
+
+            return new CreatedAtActionResult(nameof(GetUserProfileById), "User", new { id = user.UserId }, "Created user");
+        }
+
+        // POST: api/user/login
+        // Method for user login
+        [HttpPost("login")]
+        public async Task<ActionResult<User>> Login(UserLoginDto userLoginDto)
+        {
+            // Checks if the user exists
+            if (!await _userService.EmailExists(userLoginDto.Email)) return StatusCode(409, $"{userLoginDto.Email} is not registered");
+            // Checks if the login credentials are incorrect
+            if (!await _userService.AreCredentialsCorrect(userLoginDto)) return StatusCode(400, $"Wrong credentials");
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == userLoginDto.Email);
+            var token = _userService.GenerateJwtToken(user);
+            user.LastSeen = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return Ok(token);
+
+        }
         // PATCH: api/user/update
         // Method to get profile info 
         [Authorize]
@@ -119,56 +168,7 @@ namespace Quizzler_Backend.Controllers
 
             return Ok("Avatar updated");
         }
-        // GET: api/user/check
-        // Method to validate JSON Web Token
-        [Authorize]
-        [HttpGet("check")]
-        public async Task<ActionResult<User>> CheckAuth()
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
-            user.LastSeen = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return Ok("You are authorized!");
-        }
 
-        // POST: api/user/register
-        // Method to register a new user
-        [HttpPost("register")]
-        public async Task<ActionResult<User>> Register(UserRegisterDto userRegisterDto)
-        {
-            // Checks if the email or username already exists
-            if (await _userService.EmailExists(userRegisterDto.Email)) return StatusCode(409, $"Email {userRegisterDto.Email} already registered");
-            if (await _userService.UsernameExists(userRegisterDto.Username)) return StatusCode(409, $"Username {userRegisterDto.Username} already registered");
-            // Checks if the email is correct
-            if (!_userService.IsEmailCorrect(userRegisterDto.Email)) return StatusCode(422, $"Email {userRegisterDto.Email} is not a proper email address");
-            // Checks if the password meets the criteria
-            if (!_userService.IsPasswordGoodEnough(userRegisterDto.Password)) return StatusCode(422, $"Password does not meet the requirements");
-
-            var user = await _userService.CreateUser(userRegisterDto);
-            _context.User.Add(user);
-
-            await _context.SaveChangesAsync();
-
-            return new CreatedAtActionResult(nameof(GetUserProfileById), "User", new { id = user.UserId }, "Created user");
-        }
-
-        // POST: api/user/login
-        // Method for user login
-        [HttpPost("login")]
-        public async Task<ActionResult<User>> Login(UserLoginDto userLoginDto)
-        {
-            // Checks if the user exists
-            if (!await _userService.EmailExists(userLoginDto.Email)) return StatusCode(409, $"{userLoginDto.Email} is not registered");
-            // Checks if the login credentials are incorrect
-            if (!await _userService.AreCredentialsCorrect(userLoginDto)) return StatusCode(400, $"Wrong credentials");
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == userLoginDto.Email);
-            var token = _userService.GenerateJwtToken(user);
-            user.LastSeen = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return Ok(token);
-
-        }
         // DELETE: api/user/delete
         // Method to delete a user
         [Authorize]

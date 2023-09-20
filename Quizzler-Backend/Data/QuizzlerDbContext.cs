@@ -114,7 +114,7 @@ public class QuizzlerDbContext : DbContext
                 .HasForeignKey(f => f.LessonId);
 
             entity.HasOne(e => e.Owner)
-                  .WithMany()
+                  .WithMany(u => u.Lesson)
                   .HasForeignKey(e => e.OwnerId);
 
             entity.HasOne(l => l.Media)

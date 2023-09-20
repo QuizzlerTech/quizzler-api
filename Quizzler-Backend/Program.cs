@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -17,6 +18,16 @@ namespace Quizzler_Backend
         {
             var builder = WebApplication.CreateBuilder(args);
             var configuration = builder.Configuration;
+
+
+            if (!builder.Environment.IsDevelopment())
+            {
+                builder.WebHost.ConfigureKestrel(serverOptions =>
+                {
+                    serverOptions.ListenAnyIP(443);
+                });
+            }
+
 
 
             builder.Services.AddControllers().AddJsonOptions(options =>
@@ -90,12 +101,7 @@ namespace Quizzler_Backend
                 app.UseExceptionHandler("/Error");
                 app.UseHsts();
             }
-            /*            
-            else
-            {
-                app.UseHttpsRedirection();
-            }
-            */
+    
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
@@ -105,6 +111,7 @@ namespace Quizzler_Backend
             app.UseAuthorization();
             app.MapControllers();
             app.Run();
+
         }
     }
 }

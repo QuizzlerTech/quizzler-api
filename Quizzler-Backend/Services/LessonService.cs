@@ -38,7 +38,6 @@ namespace Quizzler_Backend.Controllers.Services
         // Check if the lesson title exists for this user
         public bool TitleExists(string title, User user)
         {
-            Console.WriteLine(user.Lesson.Count);
             if (string.IsNullOrEmpty(title)) throw new ArgumentException("Title cannot be null or empty", nameof(title));
             if (user == null) throw new ArgumentNullException(nameof(user));
             return user.Lesson.Any(l => l.Title == title);
