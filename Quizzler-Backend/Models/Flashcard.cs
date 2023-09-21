@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Quizzler_Backend.Models
 {
@@ -24,6 +25,7 @@ namespace Quizzler_Backend.Models
         public int? AnswerMediaId { get; set; }
 
         [ForeignKey("LessonId")]
+        [JsonIgnore]
         public virtual Lesson Lesson { get; set; }
         [ForeignKey("QuestionMediaId")]
         public virtual Media? QuestionMedia { get; set; }

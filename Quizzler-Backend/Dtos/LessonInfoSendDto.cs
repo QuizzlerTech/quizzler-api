@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Quizzler_Backend.Dtos
 {
     // Data Transfer Object
-    public class LessonSendDto
+    public class LessonInfoSendDto
     {
         public int LessonId { get; set; }
         public string Title { get; set; }
@@ -12,6 +12,5 @@ namespace Quizzler_Backend.Dtos
         public string? ImagePath { get; set; }
         public DateTime DateCreated { get; set; }
         public bool isPublic { get; set; }
-        public ICollection<FlashcardSendDto> Flashcards { get; set; }
     }
 }

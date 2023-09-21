@@ -80,7 +80,7 @@ namespace Quizzler_Backend.Controllers
         // Method to get logged user lessons info 
         [Authorize]
         [HttpGet("lessons")]
-        public async Task<ActionResult<ICollection<LessonSendDto>>> GetMyLessons()
+        public async Task<ActionResult<ICollection<LessonInfoSendDto>>> GetMyLessons()
         {
             try
             {
@@ -97,7 +97,7 @@ namespace Quizzler_Backend.Controllers
         // GET: api/user/{id}/lessons
         // Method to get lessons info 
         [HttpGet("{id}/lessons")]
-        public async Task<ActionResult<ICollection<LessonSendDto>>> GetUserLessonsById(int id)
+        public async Task<ActionResult<ICollection<LessonInfoSendDto>>> GetUserLessonsById(int id)
         {
             var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null) return NotFound("No user found");
@@ -105,10 +105,10 @@ namespace Quizzler_Backend.Controllers
             bool isItLoggedUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == id.ToString();
             var result = user.Lesson
                              .Where(l => l.IsPublic || isItLoggedUser)
-                             .Select(l => new LessonSendDto { LessonId = l.LessonId, Title = l.Title, Description = l.Description, ImagePath = l.Media?.Path})
+                             .Select(l => new LessonInfoSendDto { LessonId = l.LessonId, Title = l.Title, Description = l.Description, ImagePath = l.Media?.Path, DateCreated = l.DateCreated, isPublic=l.IsPublic})
                              .ToList();
 
-            return Ok(result.Count == 0 ? new List<LessonSendDto>() : result);
+            return Ok(result.Count == 0 ? new List<LessonInfoSendDto>() : result);
         }
 
 

@@ -33,15 +33,39 @@ namespace Quizzler_Backend.Controllers
         // Method to get lesson by id
         [HttpGet("{id}")]
         [AllowPublicLessonFilter]
-        public async Task<ActionResult<Lesson>> GetLessonById(int id)
+        public async Task<ActionResult<LessonSendDto>> GetLessonById(int id)
         {
-            var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId == id);
-            return Ok(lesson);
+            var lesson = await _context.Lesson
+                                       .Include(l => l.Flashcards)
+                                       .FirstOrDefaultAsync(u => u.LessonId == id);
+
+            if (lesson == null) return NotFound();
+            // Populate LessonSendDto
+            var lessonSendDto = new LessonSendDto
+            {
+                LessonId = lesson.LessonId,
+                Title = lesson.Title,
+                Description = lesson.Description,
+                ImagePath = lesson.Media?.Path,
+                DateCreated = lesson.DateCreated,
+                isPublic = lesson.IsPublic,
+                Flashcards = lesson.Flashcards.Select(f => new FlashcardSendDto
+                {
+                    FlashcardId = f.FlashcardId,
+                    DateCreated = f.DateCreated,
+                    QuestionText = f.QuestionText,
+                    AnswerText = f.AnswerText,
+                    QuestionImagePath = f.QuestionMedia?.Path,
+                    AnswerImagePath = f.AnswerMedia?.Path
+                }).ToList()
+            };
+
+            return Ok(lessonSendDto);
         }
 
         // POST: api/lesson/add
         // Method to create new lesson
-      
+
         [Authorize]
         [HttpPost("add")]
         public async Task<ActionResult<Lesson>> AddNewLesson([FromForm] LessonAddDto lessonAddDto)
