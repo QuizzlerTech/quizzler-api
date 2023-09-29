@@ -25,6 +25,8 @@ namespace Quizzler_Backend.Models
         public int? LessonMediaId { get; set; } = null;
 
         public virtual List<Flashcard> Flashcards { get; set; } = new List<Flashcard>();
+        public virtual List<LessonTag> LessonTags { get; set; } = new List<LessonTag>();
+
         [ForeignKey("OwnerId")]
         public virtual User Owner { get; set; }
         [ForeignKey("LessonMediaId")]

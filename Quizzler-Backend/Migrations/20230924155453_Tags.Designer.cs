@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Quizzler_Backend.Migrations
 {
     [DbContext(typeof(QuizzlerDbContext))]
-    partial class QuizzlerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230924155453_Tags")]
+    partial class Tags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -85,33 +88,6 @@ namespace Quizzler_Backend.Migrations
                     b.HasIndex("QuestionMediaId");
 
                     b.ToTable("Flashcard");
-                });
-
-            modelBuilder.Entity("Quizzler_Backend.Models.FlashcardLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("FlashcardId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("WasCorrect")
-                        .HasColumnType("tinyint(1)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FlashcardId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("FlashcardLog");
                 });
 
             modelBuilder.Entity("Quizzler_Backend.Models.Lesson", b =>
@@ -402,23 +378,6 @@ namespace Quizzler_Backend.Migrations
                     b.Navigation("QuestionMedia");
                 });
 
-            modelBuilder.Entity("Quizzler_Backend.Models.FlashcardLog", b =>
-                {
-                    b.HasOne("Quizzler_Backend.Models.Flashcard", "Flashcard")
-                        .WithMany("FlashcardLog")
-                        .HasForeignKey("FlashcardId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Quizzler_Backend.Models.User", "User")
-                        .WithMany("FlashcardLog")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("Flashcard");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Quizzler_Backend.Models.Lesson", b =>
                 {
                     b.HasOne("Quizzler_Backend.Models.Media", "Media")
@@ -517,11 +476,6 @@ namespace Quizzler_Backend.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("Quizzler_Backend.Models.Flashcard", b =>
-                {
-                    b.Navigation("FlashcardLog");
-                });
-
             modelBuilder.Entity("Quizzler_Backend.Models.Lesson", b =>
                 {
                     b.Navigation("Flashcards");
@@ -546,8 +500,6 @@ namespace Quizzler_Backend.Migrations
 
             modelBuilder.Entity("Quizzler_Backend.Models.User", b =>
                 {
-                    b.Navigation("FlashcardLog");
-
                     b.Navigation("Lesson");
 
                     b.Navigation("LoginInfo")

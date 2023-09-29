@@ -49,6 +49,7 @@ namespace Quizzler_Backend.Controllers
                 ImagePath = lesson.Media?.Path,
                 DateCreated = lesson.DateCreated,
                 isPublic = lesson.IsPublic,
+                Tags = lesson.LessonTags.Select(l => l.Tag.Name).ToList(),
                 Flashcards = lesson.Flashcards.Select(f => new FlashcardSendDto
                 {
                     FlashcardId = f.FlashcardId,
@@ -78,7 +79,7 @@ namespace Quizzler_Backend.Controllers
             if (!_lessonService.IsDescriptionCorrect(lessonAddDto.Description)) return BadRequest("Wrong description");
             
             var lesson = await _lessonService.CreateLesson(lessonAddDto, userId, user);
-  
+
             if (lessonAddDto.Image is not null)
             {
                 using (var memoryStream = new MemoryStream())
@@ -88,6 +89,14 @@ namespace Quizzler_Backend.Controllers
                     if (newMedia == null) return StatusCode(500, "Error saving image");
                     _context.Media.Add(newMedia);
                     lesson.Media = newMedia;
+                }
+            }
+
+            if(lessonAddDto.TagNames is not null)
+            {
+                foreach(var tagName in lessonAddDto.TagNames)
+                {
+                    await _lessonService.AddLessonTag(tagName, lesson);
                 }
             }
 

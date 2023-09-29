@@ -34,6 +34,8 @@ namespace Quizzler_Backend.Models
         public virtual List<Media> Media { get; set; } = new List<Media>(); 
         [JsonIgnore]
         public virtual LoginInfo LoginInfo { get; set; }
+        [JsonIgnore]
+        public virtual List<FlashcardLog> FlashcardLog { get; set; } = new List<FlashcardLog>();
 
     }
 }

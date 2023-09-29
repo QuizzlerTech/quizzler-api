@@ -28,8 +28,6 @@ namespace Quizzler_Backend
                 });
             }
 
-
-
             builder.Services.AddControllers();
 
             builder.Services.Configure<KestrelServerOptions>(options =>

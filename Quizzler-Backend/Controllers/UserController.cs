@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MySqlX.XDevAPI;
 using Quizzler_Backend.Controllers.Services;
 using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Models;
@@ -105,11 +106,32 @@ namespace Quizzler_Backend.Controllers
             bool isItLoggedUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == id.ToString();
             var result = user.Lesson
                              .Where(l => l.IsPublic || isItLoggedUser)
-                             .Select(l => new LessonInfoSendDto { LessonId = l.LessonId, Title = l.Title, Description = l.Description, ImagePath = l.Media?.Path, DateCreated = l.DateCreated, isPublic=l.IsPublic})
+                             .Select(l => new LessonInfoSendDto { 
+                                 LessonId = l.LessonId, 
+                                 Title = l.Title, 
+                                 Description = l.Description, 
+                                 ImagePath = l.Media?.Path, 
+                                 DateCreated = l.DateCreated, 
+                                 isPublic=l.IsPublic,
+                                 Tags = l.LessonTags.Select(l => l.Tag.Name).ToList(),
+                             })
                              .ToList();
 
             return Ok(result.Count == 0 ? new List<LessonInfoSendDto>() : result);
         }
+
+        // GET: api/user/flashcardsCreated
+        // Method to get flashcard creation info
+        [Authorize]
+        [HttpGet("flashcardsCreated")]
+        public async Task<ActionResult<List<DateTime>>> GetUserFlashcardsCreationDates()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+            var flashcardDates = user.Lesson.SelectMany(f => f.Flashcards).Select(d => d.DateCreated).ToList();
+            return flashcardDates;
+        }
+
 
 
         // POST: api/user/register
@@ -156,7 +178,7 @@ namespace Quizzler_Backend.Controllers
         public async Task<ActionResult<User>> UpdateUser(UserUpdateDto userUpdateDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; 
-            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() ==userId);
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
 
             if (!await _userService.AreCredentialsCorrect(new UserLoginDto { Email = user.Email, Password = userUpdateDto.CurrentPassword })) return StatusCode(400, $"Wrong credentials");
 

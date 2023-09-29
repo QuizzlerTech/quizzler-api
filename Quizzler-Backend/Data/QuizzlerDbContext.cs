@@ -112,6 +112,10 @@ public class QuizzlerDbContext : DbContext
                 .WithOne(f => f.Lesson)
                 .HasForeignKey(f => f.LessonId);
 
+            entity.HasMany(l => l.LessonTags)
+                  .WithOne(lt => lt.Lesson)
+                  .HasForeignKey(lt => lt.LessonId);
+
             entity.HasOne(e => e.Owner)
                   .WithMany(u => u.Lesson)
                   .HasForeignKey(e => e.OwnerId);
@@ -149,6 +153,23 @@ public class QuizzlerDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(l => l.AnswerMediaId);
         });
+
+        // Tag Configuration
+        modelBuilder.Entity<Tag>(entity => {
+            entity.HasMany(t => t.LessonTags)
+                  .WithOne(lt => lt.Tag)
+                  .HasForeignKey(lt => lt.TagId);
+        });
+        // LessonTag Configuration
+        modelBuilder.Entity<LessonTag>().HasKey(lt => new { lt.LessonId, lt.TagId });
+
+        // FlashcardLog Configuration
+        modelBuilder.Entity<FlashcardLog>(entity => {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(f => f.Flashcard)
+                .WithMany(f => f.FlashcardLog)
+                .HasForeignKey( f => f.FlashcardId);
+        });
     }
 
 
@@ -168,4 +189,7 @@ public class QuizzlerDbContext : DbContext
     public DbSet<Quiz> Quiz { get; set; }
     public DbSet<Question> Question { get; set; }
     public DbSet<Answer> Answer { get; set; }
+    public DbSet<Tag> Tag { get; set; }
+    public DbSet<LessonTag> LessonTag{ get; set; }
+    public DbSet<FlashcardLog> FlashcardLog { get; set; }
 }

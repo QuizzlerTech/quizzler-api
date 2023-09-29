@@ -31,5 +31,6 @@ namespace Quizzler_Backend.Models
         public virtual Media? QuestionMedia { get; set; }
         [ForeignKey("AnswerMediaId")]
         public virtual Media? AnswerMedia { get; set; }
+        public virtual List<FlashcardLog>? FlashcardLog { get; set; }
     }
 }

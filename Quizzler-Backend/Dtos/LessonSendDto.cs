@@ -12,6 +12,7 @@ namespace Quizzler_Backend.Dtos
         public string? ImagePath { get; set; }
         public DateTime DateCreated { get; set; }
         public bool isPublic { get; set; }
+        public List<string>? Tags { get; set; }
         public ICollection<FlashcardSendDto> Flashcards { get; set; }
     }
 }

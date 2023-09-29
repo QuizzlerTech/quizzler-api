@@ -1,4 +1,6 @@
-﻿using Quizzler_Backend.Dtos;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Models;
 using Quizzler_Backend.Services;
 using System.Text.RegularExpressions;
@@ -9,10 +11,12 @@ namespace Quizzler_Backend.Controllers.Services
     {        
         // Field variables
         private readonly GlobalService _globalService;
-            
+        private readonly QuizzlerDbContext _context;
+
         // Constructor
         public LessonService(QuizzlerDbContext context, GlobalService globalService)
         {
+            _context = context;
             _globalService = globalService;
         }
 
@@ -61,6 +65,24 @@ namespace Quizzler_Backend.Controllers.Services
         public string GenerateImageName(string title)
         {
             return MakeAlphaNumerical(title) + _globalService.CreateSalt() + ".jpeg";
+        }
+
+        // Add Tag
+        public async Task<Tag> AddTag(string tagName)
+        {
+            var tag = new Tag { Name = tagName.ToLower() };
+            _context.Tag.Add(tag);
+            return tag;
+        }
+
+        // Add LessonTag
+        public async Task AddLessonTag(string tagName, Lesson lesson)
+        {
+            var tag = await _context.Tag.FirstOrDefaultAsync(t => t.Name == tagName);
+            if (tag == null) tag = await AddTag(tagName);    
+            var lessonTag = new LessonTag { Lesson= lesson, Tag = tag};
+
+            _context.LessonTag.Add(lessonTag);
         }
     }
 }

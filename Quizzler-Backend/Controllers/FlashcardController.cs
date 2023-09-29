@@ -30,7 +30,6 @@ namespace Quizzler_Backend.Controllers
         }
         // POST: api/flashcard/add
         // Method to create new flashcard
-      
         [Authorize]
         [HttpPost("add")]
         public async Task<ActionResult<Flashcard>> AddNewFlashcard([FromForm] FlashcardAddDto flashcardAddDto)
@@ -72,9 +71,9 @@ namespace Quizzler_Backend.Controllers
             await _context.SaveChangesAsync();
             return StatusCode(201, $"Created flashcard {newFlaschard.FlashcardId}");
         }
+
         // PATCH: api/flashcard/update
-        // Method to update a flashcard
-      
+        // Method to update a flashcard  
         [Authorize]
         [HttpPatch("update")]
 
@@ -110,12 +109,13 @@ namespace Quizzler_Backend.Controllers
                 }
             }
             if (flashcard.QuestionText == null && flashcard.QuestionMedia == null) return BadRequest("No question text nor image after the update");
-            if (flashcard.AnswerText == null && flashcard.AnswerMedia== null) return BadRequest("No answer text nor image after the update");
+            if (flashcard.AnswerText == null && flashcard.AnswerMedia == null) return BadRequest("No answer text nor image after the update");
 
             _context.Flashcard.Update(flashcard);
             await _context.SaveChangesAsync();
             return StatusCode(201, $"Updated flashcard {flashcard.FlashcardId}");
         }
+
         // DELETE: api/flashcard/delete
         // Method to delete a flashcard
         [Authorize]
@@ -135,5 +135,22 @@ namespace Quizzler_Backend.Controllers
 
         }
 
+        // POST: api/flashcard/log
+        // Method to log the flashcard learned
+        [HttpPost("log")]
+        public async Task<ActionResult<FlashcardLog>> FlashcardLog(FlashcardLogDto flashcardLogDto)
+        {
+            var flashcard = await _context.Flashcard.FirstOrDefaultAsync(f => f.FlashcardId == flashcardLogDto.FlashcardId);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _context.User.FirstOrDefaultAsync( u=> u.UserId.ToString() == userId);
+            
+            if (flashcard == null) return BadRequest("Flashcard not found");
+            var newLog = new FlashcardLog { Date = DateTime.UtcNow, Flashcard = flashcard, WasCorrect = flashcardLogDto.wasCorrect, User = user};
+            
+            _context.FlashcardLog.Add(newLog);
+            await _context.SaveChangesAsync();
+
+            return Ok("Log made");
+        }
     }
 }
