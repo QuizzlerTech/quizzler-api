@@ -145,6 +145,14 @@ namespace Quizzler_Backend.Controllers
                     _context.Media.Add(newMedia);
                 }
             }
+            if (lessonUpdateDto.TagNames != null)
+            {
+                lesson.LessonTags.RemoveAll(t=>t == t);
+                foreach (var tagName in lessonUpdateDto.TagNames)
+                {
+                    await _lessonService.AddLessonTag(tagName, lesson);
+                }
+            }
 
             await _context.SaveChangesAsync();
 
