@@ -23,10 +23,6 @@ namespace Quizzler_Backend.Services
         public async Task<Media> SaveImage(IFormFile file, string fileName, int uploaderId)
         {
             var imageMediaType = await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image");
-            if (file == null || file.Length == 0)
-            {
-                return null;
-            }
             string outputPath = Environment.GetEnvironmentVariable("ImagesPath") + fileName;
             try
             {
@@ -43,7 +39,6 @@ namespace Quizzler_Backend.Services
                         await image.SaveAsync(outputPath, new JpegEncoder { Quality = 80 });
                     }
                 }
-
                 Media media = new Media();
                 media.MediaTypeId = imageMediaType.MediaTypeId;
                 media.UploaderId = uploaderId;
@@ -56,6 +51,11 @@ namespace Quizzler_Backend.Services
             {
                 return null;
             }
+        }
+        public async Task<bool> IsImageRightSize(IFormFile file)
+        {
+            var imageMediaType = await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image");
+            return file.Length > 0  && file.Length < imageMediaType.MaxSize;
         }
         // Hash a password using Argon2
         public string HashPassword(string password, string salt)

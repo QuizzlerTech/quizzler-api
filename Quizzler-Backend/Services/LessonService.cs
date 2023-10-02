@@ -21,7 +21,7 @@ namespace Quizzler_Backend.Controllers.Services
         }
 
         // Create a new lesson
-        public async Task<Lesson> CreateLesson(LessonAddDto lessonAddDto, int ownerId, User user)
+        public Lesson CreateLesson(LessonAddDto lessonAddDto, int ownerId, User user)
         {
             if (lessonAddDto == null) throw new ArgumentNullException(nameof(lessonAddDto));
             if (user == null) throw new ArgumentNullException(nameof(user));
@@ -71,7 +71,7 @@ namespace Quizzler_Backend.Controllers.Services
         public async Task<Tag> AddTag(string tagName)
         {
             var tag = new Tag { Name = tagName.ToLower() };
-            _context.Tag.Add(tag);
+            await _context.Tag.AddAsync(tag);
             return tag;
         }
 

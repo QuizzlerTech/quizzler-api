@@ -23,7 +23,7 @@ public class QuizzlerDbContext : DbContext
             entity.Property(e => e.FirstName).HasMaxLength(20);
             entity.Property(e => e.LastName).HasMaxLength(20);
             entity.Property(e => e.DateRegistered).IsRequired();
-            entity.Property(e => e.Avatar).IsRequired().HasDefaultValue(1);
+            entity.Property(e => e.Avatar);
             entity.HasIndex(e => e.Email).IsUnique();
             entity.HasIndex(e => e.Username).IsUnique();
         });

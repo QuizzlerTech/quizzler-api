@@ -78,10 +78,11 @@ namespace Quizzler_Backend.Controllers
             if (!_lessonService.IsTitleCorrect(lessonAddDto.Title)) return BadRequest("Wrong title");
             if (!_lessonService.IsDescriptionCorrect(lessonAddDto.Description)) return BadRequest("Wrong description");
             
-            var lesson = await _lessonService.CreateLesson(lessonAddDto, userId, user);
+            var lesson = _lessonService.CreateLesson(lessonAddDto, userId, user);
 
-            if (lessonAddDto.Image is not null)
+            if (lessonAddDto.Image != null)
             {
+                if (!await _globalService.IsImageRightSize(lessonAddDto.Image)) return BadRequest("The image size is too large");
                 using (var memoryStream = new MemoryStream())
                 {
                     await lessonAddDto.Image.CopyToAsync(memoryStream);
@@ -92,7 +93,7 @@ namespace Quizzler_Backend.Controllers
                 }
             }
 
-            if(lessonAddDto.TagNames is not null)
+            if(lessonAddDto.TagNames != null)
             {
                 foreach(var tagName in lessonAddDto.TagNames)
                 {
@@ -117,26 +118,24 @@ namespace Quizzler_Backend.Controllers
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == userId);
             var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId == lessonUpdateDto.LessonId);
-            var imageMediaType = await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image");
 
             if (!(userId == lesson.OwnerId)) return Unauthorized("User is not the owner");
-            if (lessonUpdateDto.Title is not null)
+            if (lessonUpdateDto.Title != null)
             {
                 if (_lessonService.TitleExists(lessonUpdateDto.Title, user)) return BadRequest("User already has this lesson");
                 if (!_lessonService.IsTitleCorrect(lessonUpdateDto.Title)) return BadRequest("Wrong title");
                 lesson.Title = lessonUpdateDto.Title;
             }
-            if (lessonUpdateDto.Description is not null)
+            if (lessonUpdateDto.Description != null)
             {
                 if (!_lessonService.IsDescriptionCorrect(lessonUpdateDto.Description)) return BadRequest("Wrong description");
                 lesson.Description = lessonUpdateDto.Description;
             }
             lesson.IsPublic = lessonUpdateDto.IsPublic ?? lesson.IsPublic;
 
-            if (lessonUpdateDto.Image is not null)
+            if (lessonUpdateDto.Image != null)
             {
-      
-                if (lessonUpdateDto.Image.Length > imageMediaType.MaxSize) return BadRequest("The image is too large"); 
+                if (!await _globalService.IsImageRightSize(lessonUpdateDto.Image)) return BadRequest("The image size is too large"); 
                 using (var memoryStream = new MemoryStream())
                 {
                     await lessonUpdateDto.Image.CopyToAsync(memoryStream);

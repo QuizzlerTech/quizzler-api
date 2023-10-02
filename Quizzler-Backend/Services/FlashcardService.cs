@@ -15,7 +15,7 @@ namespace Quizzler_Backend.Services
             _context = context;
             _globalService = globalService;
         }
-        public async Task<Flashcard> createNewFlashcard(FlashcardAddDto flashcardAddDto)
+        public Flashcard CreateNewFlashcard(FlashcardAddDto flashcardAddDto)
         {
             var flashcard = new Flashcard
             {

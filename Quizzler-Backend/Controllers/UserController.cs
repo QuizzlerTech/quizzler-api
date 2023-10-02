@@ -184,21 +184,21 @@ namespace Quizzler_Backend.Controllers
 
             // Checks if the email or username already exists
             if (userUpdateDto.Email == "") return StatusCode(400, $"Email cannot be empty (dont send email or send a new one)"); 
-            if (userUpdateDto.Email is not null)
+            if (userUpdateDto.Email != null)
             {
                 if (await _userService.EmailExists(userUpdateDto.Email) && !(userUpdateDto.Email == user.Email)) return StatusCode(409, $"Email {userUpdateDto.Email} already registered");
             }
-            if (userUpdateDto.Username is not null)
+            if (userUpdateDto.Username != null)
             {
                 if (await _userService.UsernameExists(userUpdateDto.Username) && !(userUpdateDto.Username == user.Username)) return StatusCode(409, $"Username {userUpdateDto.Username} already registered");
             }
             // Checks if the email is correct
-            if (userUpdateDto.Email is not null)
+            if (userUpdateDto.Email != null)
             {
                 if (!_userService.IsEmailCorrect(userUpdateDto.Email)) return StatusCode(422, $"Email {userUpdateDto.Email} is not a proper email address");
             }
             // Checks if the password meets the criteria
-            if (userUpdateDto.Password is not null)
+            if (userUpdateDto.Password != null)
             {
                 if (!_userService.IsPasswordGoodEnough(userUpdateDto.Password)) return StatusCode(422, $"Password does not meet the requirements");
             }

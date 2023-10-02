@@ -38,13 +38,14 @@ namespace Quizzler_Backend.Controllers
             var lessonToAddTo = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId == flashcardAddDto.LessonId);
             if (lessonToAddTo == null) return NotFound("Not found the lesson");
             if (!(lessonToAddTo.OwnerId == userId)) return Unauthorized("User is not the owner of the lesson");
-            var newFlaschard = await _flashcardService.createNewFlashcard(flashcardAddDto);
+            var newFlaschard = _flashcardService.CreateNewFlashcard(flashcardAddDto);
 
             if (flashcardAddDto.QuestionText == null && flashcardAddDto.QuestionImage == null) return BadRequest("No question text nor image");
             if (flashcardAddDto.AnswerText == null && flashcardAddDto.AnswerImage == null) return BadRequest("No answer text nor image");
 
-            if (flashcardAddDto.QuestionImage is not null)
+            if (flashcardAddDto.QuestionImage != null)
             {
+                if (!await _globalService.IsImageRightSize(flashcardAddDto.QuestionImage)) return BadRequest("The image size is too large");
                 using (var memoryStream = new MemoryStream())
                 {
                     await flashcardAddDto.QuestionImage.CopyToAsync(memoryStream);
@@ -54,8 +55,9 @@ namespace Quizzler_Backend.Controllers
                     newFlaschard.QuestionMedia = newMedia;
                 }
             }
-            if (flashcardAddDto.AnswerImage is not null)
+            if (flashcardAddDto.AnswerImage != null)
             {
+                if (!await _globalService.IsImageRightSize(flashcardAddDto.AnswerImage)) return BadRequest("The image size is too large");
                 using (var memoryStream = new MemoryStream())
                 {
                     await flashcardAddDto.AnswerImage.CopyToAsync(memoryStream);
@@ -86,8 +88,9 @@ namespace Quizzler_Backend.Controllers
             flashcard.QuestionText = flashcardUpdateDto.QuestionText ?? flashcard.QuestionText;
             flashcard.AnswerText = flashcardUpdateDto.AnswerText ?? flashcard.AnswerText;
 
-            if (flashcardUpdateDto.QuestionImage is not null)
+            if (flashcardUpdateDto.QuestionImage != null)
             {
+                if (!await _globalService.IsImageRightSize(flashcardUpdateDto.QuestionImage)) return BadRequest("The image size is too large");
                 using (var memoryStream = new MemoryStream())
                 {
                     await flashcardUpdateDto.QuestionImage.CopyToAsync(memoryStream);
@@ -97,8 +100,9 @@ namespace Quizzler_Backend.Controllers
                     flashcard.QuestionMedia = newMedia;
                 }
             }
-            if (flashcardUpdateDto.AnswerImage is not null)
+            if (flashcardUpdateDto.AnswerImage != null)
             {
+                if (!await _globalService.IsImageRightSize(flashcardUpdateDto.AnswerImage)) return BadRequest("The image size is too large");
                 using (var memoryStream = new MemoryStream())
                 {
                     await flashcardUpdateDto.AnswerImage.CopyToAsync(memoryStream);
