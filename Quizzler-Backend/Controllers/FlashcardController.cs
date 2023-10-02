@@ -149,7 +149,7 @@ namespace Quizzler_Backend.Controllers
             var user = await _context.User.FirstOrDefaultAsync( u=> u.UserId.ToString() == userId);
             
             if (flashcard == null) return BadRequest("Flashcard not found");
-            var newLog = new FlashcardLog { Date = DateTime.UtcNow, Flashcard = flashcard, WasCorrect = flashcardLogDto.wasCorrect, User = user};
+            var newLog = new FlashcardLog { Date = DateTime.UtcNow, Flashcard = flashcard, WasCorrect = flashcardLogDto.WasCorrect, User = user};
             
             _context.FlashcardLog.Add(newLog);
             await _context.SaveChangesAsync();

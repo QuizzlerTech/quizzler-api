@@ -158,6 +158,7 @@ namespace Quizzler_Backend.Controllers
 
             return Ok("Lesson updated");
         }
+
         // DELETE: api/lesson/delete
         // Method to delete a lesson
         [Authorize]

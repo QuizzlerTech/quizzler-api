@@ -132,6 +132,29 @@ namespace Quizzler_Backend.Controllers
             return flashcardDates;
         }
 
+        // GET: api/user/logs
+        // Method to get flashcard logs for stats
+        [Authorize]
+        [HttpGet("logs")]
+        public async Task<ActionResult<List<FlashcardLogSendDto>>> GetUserLogs()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+
+            var flashcardLogs = await _context.User
+                .Where(u => u.UserId.ToString() == userId)
+                .SelectMany(u => u.FlashcardLog)
+                .Select(log => new FlashcardLogSendDto
+                {
+                    Date = log.Date,
+                    FlashcardId = log.FlashcardId,
+                    WasCorrect = log.WasCorrect
+                })
+                .ToListAsync();
+
+            return flashcardLogs;
+        }
+
 
 
         // POST: api/user/register
