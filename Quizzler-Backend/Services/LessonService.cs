@@ -81,8 +81,7 @@ namespace Quizzler_Backend.Controllers.Services
             var tag = await _context.Tag.FirstOrDefaultAsync(t => t.Name == tagName);
             if (tag == null) tag = await AddTag(tagName);
             if (lesson.LessonTags.Any(t => t.Tag.Name == tagName)) return; 
-            var lessonTag = new LessonTag { Lesson= lesson, Tag = tag};
-            _context.LessonTag.Add(lessonTag);
+            lesson.LessonTags.Add(new LessonTag { Lesson = lesson, Tag = tag });
         }
     }
 }
