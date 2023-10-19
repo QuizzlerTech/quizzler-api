@@ -147,9 +147,10 @@ namespace Quizzler_Backend.Controllers
             }
             if (lessonUpdateDto.TagNames != null)
             {
-                lesson.LessonTags.RemoveAll(t=>t == t);
+                lesson.LessonTags.Clear();
                 foreach (var tagName in lessonUpdateDto.TagNames)
                 {
+                    if (tagName == null) continue;
                     await _lessonService.AddLessonTag(tagName, lesson);
                 }
             }

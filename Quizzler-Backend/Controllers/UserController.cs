@@ -170,7 +170,7 @@ namespace Quizzler_Backend.Controllers
             // Checks if the password meets the criteria
             if (!_userService.IsPasswordGoodEnough(userRegisterDto.Password)) return StatusCode(422, $"Password does not meet the requirements");
 
-            var user = await _userService.CreateUser(userRegisterDto);
+            var user = _userService.CreateUser(userRegisterDto);
             _context.User.Add(user);
 
             await _context.SaveChangesAsync();

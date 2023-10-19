@@ -74,7 +74,7 @@ namespace Quizzler_Backend.Controllers.Services
 
 
         // Create a new user
-        public async Task<User> CreateUser(UserRegisterDto userRegisterDto)
+        public User CreateUser(UserRegisterDto userRegisterDto)
         {
             var user = new User
             {
