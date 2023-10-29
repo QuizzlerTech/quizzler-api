@@ -30,6 +30,12 @@ namespace Quizzler_Backend.Services
         {
             return _globalService.CreateSalt() + ".jpeg";
         }
-
+        public bool IsContentMissing(Flashcard flashcard)
+        {
+            return (flashcard.QuestionText == null && flashcard.QuestionMedia == null) ||
+                   (flashcard.QuestionText == "" && flashcard.QuestionMedia == null) ||
+                   (flashcard.AnswerText == null && flashcard.AnswerMedia == null) ||
+                   (flashcard.AnswerText == "" && flashcard.AnswerMedia == null);
+        }
     }
 }

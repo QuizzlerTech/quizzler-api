@@ -69,11 +69,11 @@ namespace Quizzler_Backend.Controllers
             }
 
             _context.Flashcard.Add(newFlaschard);
-
+            
             await _context.SaveChangesAsync();
             return StatusCode(201, $"Created flashcard {newFlaschard.FlashcardId}");
         }
-
+    
         // PATCH: api/flashcard/update
         // Method to update a flashcard  
         [Authorize]
@@ -87,7 +87,11 @@ namespace Quizzler_Backend.Controllers
             if (flashcard.Lesson.OwnerId != userId) return Unauthorized("User is not the owner of the lesson");
             flashcard.QuestionText = flashcardUpdateDto.QuestionText ?? flashcard.QuestionText;
             flashcard.AnswerText = flashcardUpdateDto.AnswerText ?? flashcard.AnswerText;
-            if(Request.Form.ContainsKey("QuestionImage") && flashcardUpdateDto.QuestionImage is null && flashcard.QuestionMedia != null)
+
+            flashcard.QuestionText = (Request.Form.ContainsKey("QuestionText") && flashcardUpdateDto.QuestionText is null) ? null : flashcard.QuestionText;
+            flashcard.AnswerText = (Request.Form.ContainsKey("AnswerText") && flashcardUpdateDto.AnswerText is null) ? null : flashcard.AnswerText;
+
+            if (Request.Form.ContainsKey("QuestionImage") && flashcardUpdateDto.QuestionImage is null && flashcard.QuestionMedia != null)
             {
                 var media = flashcard.QuestionMedia;
                 flashcard.QuestionMediaId = null;
@@ -125,8 +129,7 @@ namespace Quizzler_Backend.Controllers
                     flashcard.AnswerMedia = newMedia;
                 }
             }
-            if (flashcard.QuestionText == null && flashcard.QuestionMedia == null) return BadRequest("No question text nor image after the update");
-            if (flashcard.AnswerText == null && flashcard.AnswerMedia == null) return BadRequest("No answer text nor image after the update");
+            if (_flashcardService.IsContentMissing(flashcard)) return BadRequest("No question text nor image after the update");
 
             _context.Flashcard.Update(flashcard);
             await _context.SaveChangesAsync();
