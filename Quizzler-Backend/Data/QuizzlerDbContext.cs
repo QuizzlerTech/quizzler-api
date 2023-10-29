@@ -40,7 +40,7 @@ public class QuizzlerDbContext : DbContext
             entity.HasOne(e => e.Owner)
                   .WithMany()
                   .HasForeignKey(e => e.QuizOwner)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(quiz => quiz.Questions)
                 .WithOne(q => q.Quiz)
@@ -86,11 +86,11 @@ public class QuizzlerDbContext : DbContext
             entity.HasOne(e => e.MediaType)
                   .WithMany()
                   .HasForeignKey(e => e.MediaTypeId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.Uploader)
                   .WithMany()
                   .HasForeignKey(e => e.UploaderId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
         });
 
@@ -128,7 +128,7 @@ public class QuizzlerDbContext : DbContext
             entity.HasOne(e => e.Owner)
                   .WithMany(u => u.Lesson)
                   .HasForeignKey(e => e.OwnerId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(l => l.Media)
                 .WithMany()
