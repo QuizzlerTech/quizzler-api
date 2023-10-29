@@ -83,11 +83,24 @@ namespace Quizzler_Backend.Controllers
         {
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var flashcard = await _context.Flashcard.FirstOrDefaultAsync(f => f.FlashcardId == flashcardUpdateDto.FlashcardId);
-            if (flashcard.FlashcardId == userId) return Unauthorized("User is not the owner of the lesson");
             if (flashcard == null) return NotFound("Not found the flashcard");
+            if (flashcard.Lesson.OwnerId != userId) return Unauthorized("User is not the owner of the lesson");
             flashcard.QuestionText = flashcardUpdateDto.QuestionText ?? flashcard.QuestionText;
             flashcard.AnswerText = flashcardUpdateDto.AnswerText ?? flashcard.AnswerText;
-
+            if(Request.Form.ContainsKey("QuestionImage") && flashcardUpdateDto.QuestionImage is null && flashcard.QuestionMedia != null)
+            {
+                var media = flashcard.QuestionMedia;
+                flashcard.QuestionMediaId = null;
+                flashcard.QuestionMedia = null;
+                _context.Media.Remove(media);
+            }
+            if (Request.Form.ContainsKey("AnswerImage") && flashcardUpdateDto.AnswerImage is null && flashcard.AnswerMedia != null)
+            {
+                var media = flashcard.AnswerMedia;
+                flashcard.AnswerMediaId = null;
+                flashcard.AnswerMedia = null;
+                _context.Media.Remove(media);
+            }
             if (flashcardUpdateDto.QuestionImage != null)
             {
                 if (!await _globalService.IsImageRightSize(flashcardUpdateDto.QuestionImage)) return BadRequest("The image size is too large");
