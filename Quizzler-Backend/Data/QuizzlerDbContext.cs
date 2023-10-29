@@ -39,11 +39,13 @@ public class QuizzlerDbContext : DbContext
             entity.Property(e => e.DateCreated).IsRequired();
             entity.HasOne(e => e.Owner)
                   .WithMany()
-                  .HasForeignKey(e => e.QuizOwner);
+                  .HasForeignKey(e => e.QuizOwner)
+                  .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasMany(quiz => quiz.Questions)
                 .WithOne(q => q.Quiz)
-                .HasForeignKey(q => q.QuizId);
+                .HasForeignKey(q => q.QuizId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
 
@@ -55,10 +57,13 @@ public class QuizzlerDbContext : DbContext
             entity.Property(e => e.QuestionText).HasMaxLength(255);
             entity.HasOne(e => e.Media)
                   .WithMany()
-                  .HasForeignKey(e => e.QuestionMediaId);
+                  .HasForeignKey(e => e.QuestionMediaId)
+                  .OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(question => question.Answers)
                 .WithOne(q => q.Question)
-                .HasForeignKey(q => q.QuestionId);
+                .HasForeignKey(q => q.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         });
 
         // MediaType Configuration
@@ -80,10 +85,12 @@ public class QuizzlerDbContext : DbContext
             entity.Property(e => e.FileSize).IsRequired();
             entity.HasOne(e => e.MediaType)
                   .WithMany()
-                  .HasForeignKey(e => e.MediaTypeId);
+                  .HasForeignKey(e => e.MediaTypeId)
+                  .OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.Uploader)
                   .WithMany()
-                  .HasForeignKey(e => e.UploaderId);
+                  .HasForeignKey(e => e.UploaderId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
         });
 
@@ -110,19 +117,23 @@ public class QuizzlerDbContext : DbContext
 
             entity.HasMany(l => l.Flashcards)
                 .WithOne(f => f.Lesson)
-                .HasForeignKey(f => f.LessonId);
+                .HasForeignKey(f => f.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasMany(l => l.LessonTags)
                   .WithOne(lt => lt.Lesson)
-                  .HasForeignKey(lt => lt.LessonId);
+                  .HasForeignKey(lt => lt.LessonId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(e => e.Owner)
                   .WithMany(u => u.Lesson)
-                  .HasForeignKey(e => e.OwnerId);
+                  .HasForeignKey(e => e.OwnerId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(l => l.Media)
                 .WithMany()
-                .HasForeignKey(l => l.LessonMediaId);
+                .HasForeignKey(l => l.LessonMediaId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Flashcard Configuration
@@ -135,11 +146,13 @@ public class QuizzlerDbContext : DbContext
             entity.Property(e => e.AnswerText).HasMaxLength(200);
             entity.HasOne(l => l.AnswerMedia)
                 .WithMany()
-                .HasForeignKey(l => l.AnswerMediaId);
+                .HasForeignKey(l => l.AnswerMediaId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(l => l.QuestionMedia)
                 .WithMany()
-                .HasForeignKey(l => l.QuestionMediaId);
+                .HasForeignKey(l => l.QuestionMediaId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Answer Configuration
@@ -151,11 +164,13 @@ public class QuizzlerDbContext : DbContext
             entity.Property(e => e.IsCorrect).IsRequired();
             entity.HasOne(l => l.Media)
                 .WithMany()
-                .HasForeignKey(l => l.AnswerMediaId);
+                .HasForeignKey(l => l.AnswerMediaId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Tag Configuration
-        modelBuilder.Entity<Tag>(entity => {
+        modelBuilder.Entity<Tag>(entity =>
+        {
             entity.HasMany(t => t.LessonTags)
                   .WithOne(lt => lt.Tag)
                   .HasForeignKey(lt => lt.TagId);
@@ -164,11 +179,13 @@ public class QuizzlerDbContext : DbContext
         modelBuilder.Entity<LessonTag>().HasKey(lt => new { lt.LessonId, lt.TagId });
 
         // FlashcardLog Configuration
-        modelBuilder.Entity<FlashcardLog>(entity => {
+        modelBuilder.Entity<FlashcardLog>(entity =>
+        {
             entity.HasKey(e => e.Id);
             entity.HasOne(f => f.Flashcard)
                 .WithMany(f => f.FlashcardLog)
-                .HasForeignKey( f => f.FlashcardId);
+                .HasForeignKey(f => f.FlashcardId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 
@@ -190,6 +207,6 @@ public class QuizzlerDbContext : DbContext
     public DbSet<Question> Question { get; set; }
     public DbSet<Answer> Answer { get; set; }
     public DbSet<Tag> Tag { get; set; }
-    public DbSet<LessonTag> LessonTag{ get; set; }
+    public DbSet<LessonTag> LessonTag { get; set; }
     public DbSet<FlashcardLog> FlashcardLog { get; set; }
 }

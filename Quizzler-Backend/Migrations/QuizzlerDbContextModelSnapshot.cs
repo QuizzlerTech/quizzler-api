@@ -364,7 +364,8 @@ namespace Quizzler_Backend.Migrations
                 {
                     b.HasOne("Quizzler_Backend.Models.Media", "Media")
                         .WithMany()
-                        .HasForeignKey("AnswerMediaId");
+                        .HasForeignKey("AnswerMediaId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Quizzler_Backend.Models.Question", "Question")
                         .WithMany("Answers")
@@ -381,7 +382,8 @@ namespace Quizzler_Backend.Migrations
                 {
                     b.HasOne("Quizzler_Backend.Models.Media", "AnswerMedia")
                         .WithMany()
-                        .HasForeignKey("AnswerMediaId");
+                        .HasForeignKey("AnswerMediaId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Quizzler_Backend.Models.Lesson", "Lesson")
                         .WithMany("Flashcards")
@@ -391,7 +393,8 @@ namespace Quizzler_Backend.Migrations
 
                     b.HasOne("Quizzler_Backend.Models.Media", "QuestionMedia")
                         .WithMany()
-                        .HasForeignKey("QuestionMediaId");
+                        .HasForeignKey("QuestionMediaId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("AnswerMedia");
 
@@ -421,7 +424,8 @@ namespace Quizzler_Backend.Migrations
                 {
                     b.HasOne("Quizzler_Backend.Models.Media", "Media")
                         .WithMany()
-                        .HasForeignKey("LessonMediaId");
+                        .HasForeignKey("LessonMediaId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Quizzler_Backend.Models.User", "Owner")
                         .WithMany("Lesson")
@@ -491,7 +495,8 @@ namespace Quizzler_Backend.Migrations
                 {
                     b.HasOne("Quizzler_Backend.Models.Media", "Media")
                         .WithMany()
-                        .HasForeignKey("QuestionMediaId");
+                        .HasForeignKey("QuestionMediaId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Quizzler_Backend.Models.Quiz", "Quiz")
                         .WithMany("Questions")
