@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Quizzler_Backend.Models
@@ -11,12 +10,12 @@ namespace Quizzler_Backend.Models
 
         [Required]
         [StringLength(32)]
-        public string Username { get; set; }
+        public string Username { get; set; } = null!;
 
         [Required]
         [EmailAddress]
         [StringLength(100)]
-        public string Email { get; set; }
+        public string Email { get; set; } = null!;
 
         [StringLength(20)]
         public string? FirstName { get; set; }
@@ -31,9 +30,9 @@ namespace Quizzler_Backend.Models
         [JsonIgnore]
         public virtual List<Lesson> Lesson { get; set; } = new List<Lesson>();
         [JsonIgnore]
-        public virtual List<Media> Media { get; set; } = new List<Media>(); 
-        [JsonIgnore]    
-        public virtual LoginInfo LoginInfo { get; set; }
+        public virtual List<Media> Media { get; set; } = new List<Media>();
+        [JsonIgnore]
+        public virtual LoginInfo LoginInfo { get; set; } = null!;
         [JsonIgnore]
         public virtual List<FlashcardLog> FlashcardLog { get; set; } = new List<FlashcardLog>();
 

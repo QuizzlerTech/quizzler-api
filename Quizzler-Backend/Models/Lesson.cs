@@ -16,7 +16,7 @@ namespace Quizzler_Backend.Models
 
         [Required]
         [StringLength(40)]
-        public string Title { get; set; }
+        public string Title { get; set; } = null!;
 
         [StringLength(150)]
         public string? Description { get; set; }
@@ -28,7 +28,7 @@ namespace Quizzler_Backend.Models
         public virtual List<LessonTag> LessonTags { get; set; } = new List<LessonTag>();
 
         [ForeignKey("OwnerId")]
-        public virtual User Owner { get; set; }
+        public virtual User Owner { get; set; } = null!;
         [ForeignKey("LessonMediaId")]
         public virtual Media? Media { get; set; }
     }

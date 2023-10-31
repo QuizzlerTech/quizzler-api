@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MySqlX.XDevAPI;
 using Quizzler_Backend.Controllers.Services;
+using Quizzler_Backend.Data;
 using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Models;
 using Quizzler_Backend.Services;
@@ -72,6 +72,7 @@ namespace Quizzler_Backend.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+            if (user == null) return NotFound("User doesnt exist");
             user.LastSeen = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return Ok("You are authorized!");
@@ -106,14 +107,16 @@ namespace Quizzler_Backend.Controllers
             bool isItLoggedUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == id.ToString();
             var result = user.Lesson
                              .Where(l => l.IsPublic || isItLoggedUser)
-                             .Select(l => new LessonInfoSendDto { 
-                                 LessonId = l.LessonId, 
-                                 Title = l.Title, 
-                                 Description = l.Description, 
-                                 ImagePath = l.Media?.Path, 
-                                 DateCreated = l.DateCreated, 
-                                 isPublic=l.IsPublic,
+                             .Select(l => new LessonInfoSendDto
+                             {
+                                 LessonId = l.LessonId,
+                                 Title = l.Title,
+                                 Description = l.Description,
+                                 ImagePath = l.Media?.Path,
+                                 DateCreated = l.DateCreated,
+                                 IsPublic = l.IsPublic,
                                  Tags = l.LessonTags.Select(l => l.Tag.Name).ToList(),
+                                 FlashcardCount = l.Flashcards.Count,
                              })
                              .ToList();
 
@@ -128,7 +131,7 @@ namespace Quizzler_Backend.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
-            var flashcardDates = user.Lesson.SelectMany(f => f.Flashcards).Select(d => d.DateCreated).ToList();
+            var flashcardDates = user!.Lesson.SelectMany(f => f.Flashcards).Select(d => d.DateCreated).ToList();
             return flashcardDates;
         }
 
@@ -163,12 +166,12 @@ namespace Quizzler_Backend.Controllers
         public async Task<ActionResult<User>> Register(UserRegisterDto userRegisterDto)
         {
             // Checks if the email or username already exists
-            if (await _userService.EmailExists(userRegisterDto.Email)) return StatusCode(409, $"Email {userRegisterDto.Email} already registered");
-            if (await _userService.UsernameExists(userRegisterDto.Username)) return StatusCode(409, $"Username {userRegisterDto.Username} already registered");
+            if (await _userService.EmailExists(userRegisterDto.Email)) return Conflict($"Email already registered");
+            if (await _userService.UsernameExists(userRegisterDto.Username)) return Conflict("Username already registered");
             // Checks if the email is correct
-            if (!_userService.IsEmailCorrect(userRegisterDto.Email)) return StatusCode(422, $"Email {userRegisterDto.Email} is not a proper email address");
+            if (!_userService.IsEmailCorrect(userRegisterDto.Email)) return BadRequest($"Given email is not a proper email address");
             // Checks if the password meets the criteria
-            if (!_userService.IsPasswordGoodEnough(userRegisterDto.Password)) return StatusCode(422, $"Password does not meet the requirements");
+            if (!_userService.IsPasswordGoodEnough(userRegisterDto.Password)) return BadRequest("The password must be at least 8 characters long");
 
             var user = _userService.CreateUser(userRegisterDto);
             _context.User.Add(user);
@@ -183,49 +186,48 @@ namespace Quizzler_Backend.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<User>> Login(UserLoginDto userLoginDto)
         {
-            // Checks if the user exists
-            if (!await _userService.EmailExists(userLoginDto.Email)) return StatusCode(409, $"{userLoginDto.Email} is not registered");
-            // Checks if the login credentials are incorrect
-            if (!await _userService.AreCredentialsCorrect(userLoginDto)) return StatusCode(400, $"Wrong credentials");
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == userLoginDto.Email);
+            if (user == null) return Unauthorized("Invalid credentials");
+            if (!await _userService.AreCredentialsCorrect(userLoginDto)) return Unauthorized("Invalid credentials");
             var token = _userService.GenerateJwtToken(user);
             user.LastSeen = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return Ok(token);
-
         }
+
         // PATCH: api/user/update
         // Method to get profile info 
         [Authorize]
         [HttpPatch("update")]
         public async Task<ActionResult<User>> UpdateUser(UserUpdateDto userUpdateDto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; 
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
 
-            if (!await _userService.AreCredentialsCorrect(new UserLoginDto { Email = user.Email, Password = userUpdateDto.CurrentPassword })) return StatusCode(400, $"Wrong credentials");
+            if (user == null) return NotFound("User not found.");
 
-            // Checks if the email or username already exists
-            if (userUpdateDto.Email == "") return StatusCode(400, $"Email cannot be empty (dont send email or send a new one)"); 
-            if (userUpdateDto.Email != null)
-            {
-                if (await _userService.EmailExists(userUpdateDto.Email) && !(userUpdateDto.Email == user.Email)) return StatusCode(409, $"Email {userUpdateDto.Email} already registered");
-            }
-            if (userUpdateDto.Username != null)
-            {
-                if (await _userService.UsernameExists(userUpdateDto.Username) && !(userUpdateDto.Username == user.Username)) return StatusCode(409, $"Username {userUpdateDto.Username} already registered");
-            }
-            // Checks if the email is correct
-            if (userUpdateDto.Email != null)
-            {
-                if (!_userService.IsEmailCorrect(userUpdateDto.Email)) return StatusCode(422, $"Email {userUpdateDto.Email} is not a proper email address");
-            }
-            // Checks if the password meets the criteria
-            if (userUpdateDto.Password != null)
-            {
-                if (!_userService.IsPasswordGoodEnough(userUpdateDto.Password)) return StatusCode(422, $"Password does not meet the requirements");
-            }
+            if (!await _userService.AreCredentialsCorrect(new UserLoginDto { Email = user.Email, Password = userUpdateDto.CurrentPassword }))
+                return Unauthorized("Invalid credentials");
 
+            // Email checks
+            if (string.IsNullOrWhiteSpace(userUpdateDto.Email))
+                return BadRequest("Email cannot be empty.");
+
+            if (userUpdateDto.Email != null && userUpdateDto.Email != user.Email && await _userService.EmailExists(userUpdateDto.Email))
+                return Conflict($"Email {userUpdateDto.Email} already registered");
+
+            if (userUpdateDto.Email != null && !_userService.IsEmailCorrect(userUpdateDto.Email))
+                return BadRequest($"Email {userUpdateDto.Email} is not a proper email address");
+
+            // Username check
+            if (userUpdateDto.Username != null && userUpdateDto.Username != user.Username && await _userService.UsernameExists(userUpdateDto.Username))
+                return Conflict($"Username {userUpdateDto.Username} already registered");
+
+            // Password check
+            if (userUpdateDto.Password != null && !_userService.IsPasswordGoodEnough(userUpdateDto.Password))
+                return BadRequest("The password must be at least 8 characters long.");
+
+            // Updating user details
             user.Username = userUpdateDto.Username ?? user.Username;
             user.Email = userUpdateDto.Email ?? user.Email;
             user.FirstName = userUpdateDto.FirstName ?? user.FirstName;
@@ -234,8 +236,9 @@ namespace Quizzler_Backend.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok("Updated");
+            return Ok(user);
         }
+
         // PATCH: api/user/update
         // Method to get profile info 
         [Authorize]
@@ -244,10 +247,8 @@ namespace Quizzler_Backend.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
-            user.Avatar = userUpdateAvatarDto.Avatar;
-
+            user!.Avatar = userUpdateAvatarDto.Avatar;
             await _context.SaveChangesAsync();
-
             return Ok("Avatar updated");
         }
 
@@ -259,19 +260,12 @@ namespace Quizzler_Backend.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
-            try
-            {
-                if (!await _userService.AreCredentialsCorrect(new UserLoginDto { Email = user.Email, Password = userPassword })) return StatusCode(403, "Invalid credentials");
-                // Removes user from the database and save changes
-                _context.User.Remove(user);
-                await _context.SaveChangesAsync();
-                return Ok("User deleted successfully.");
-
-            }
-            catch (Exception ex)
-            {
-                return NotFound("No user found");
-            }
+            if (user == null) return NotFound("User not found");
+            if (!await _userService.AreCredentialsCorrect(new UserLoginDto { Email = user!.Email, Password = userPassword })) return StatusCode(403, "Invalid credentials");
+            // Removes user from the database and save changes
+            _context.User.Remove(user);
+            await _context.SaveChangesAsync();
+            return Ok("User deleted successfully.");
         }
     }
 

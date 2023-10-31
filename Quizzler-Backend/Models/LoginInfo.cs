@@ -9,12 +9,12 @@ namespace Quizzler_Backend.Models
         public int UserId { get; set; }
 
         [Required]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = null!;
 
         [Required]
-        public string Salt { get; set; }
+        public string Salt { get; set; } = null!;
 
         [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        public virtual User User { get; set; } = null!;
     }
 }

@@ -2,11 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Controllers.Services;
+using Quizzler_Backend.Data;
 using Quizzler_Backend.Dtos;
-using Quizzler_Backend.Models;
-using System.Security.Claims;
 using Quizzler_Backend.Filters;
+using Quizzler_Backend.Models;
 using Quizzler_Backend.Services;
+using System.Security.Claims;
 
 namespace Quizzler_Backend.Controllers
 {
@@ -48,7 +49,7 @@ namespace Quizzler_Backend.Controllers
                 Description = lesson.Description,
                 ImagePath = lesson.Media?.Path,
                 DateCreated = lesson.DateCreated,
-                isPublic = lesson.IsPublic,
+                IsPublic = lesson.IsPublic,
                 Tags = lesson.LessonTags.Select(l => l.Tag.Name).ToList(),
                 Flashcards = lesson.Flashcards.Select(f => new FlashcardSendDto
                 {
@@ -73,29 +74,28 @@ namespace Quizzler_Backend.Controllers
         {
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user == null) return Unauthorized("No user found");
 
             if (_lessonService.TitleExists(lessonAddDto.Title, user)) return BadRequest("User already has this lesson");
             if (!_lessonService.IsTitleCorrect(lessonAddDto.Title)) return BadRequest("Wrong title");
-            if (!_lessonService.IsDescriptionCorrect(lessonAddDto.Description)) return BadRequest("Wrong description");
-            
+            if (!_lessonService.IsDescriptionCorrect(lessonAddDto.Description!)) return BadRequest("Wrong description");
+
             var lesson = _lessonService.CreateLesson(lessonAddDto, userId, user);
 
             if (lessonAddDto.Image != null)
             {
                 if (!await _globalService.IsImageRightSize(lessonAddDto.Image)) return BadRequest("The image size is too large");
-                using (var memoryStream = new MemoryStream())
-                {
-                    await lessonAddDto.Image.CopyToAsync(memoryStream);
-                    var newMedia = await _globalService.SaveImage(lessonAddDto.Image, _lessonService.GenerateImageName(lessonAddDto.Title), userId);
-                    if (newMedia == null) return StatusCode(500, "Error saving image");
-                    _context.Media.Add(newMedia);
-                    lesson.Media = newMedia;
-                }
+                using var memoryStream = new MemoryStream();
+                await lessonAddDto.Image.CopyToAsync(memoryStream);
+                var newMedia = await _globalService.SaveImage(lessonAddDto.Image, _lessonService.GenerateImageName(lessonAddDto.Title), userId);
+                if (newMedia == null) return StatusCode(500, "Error saving image");
+                _context.Media.Add(newMedia);
+                lesson.Media = newMedia;
             }
 
-            if(lessonAddDto.TagNames != null)
+            if (lessonAddDto.TagNames != null)
             {
-                foreach(var tagName in lessonAddDto.TagNames)
+                foreach (var tagName in lessonAddDto.TagNames)
                 {
                     await _lessonService.AddLessonTag(tagName, lesson);
                 }
@@ -110,14 +110,17 @@ namespace Quizzler_Backend.Controllers
 
         // POST: api/lesson/update
         // Method to update a lesson
-      
+
         [Authorize]
         [HttpPatch("update")]
         public async Task<ActionResult<Lesson>> UpdateLesson([FromForm] LessonUpdateDto lessonUpdateDto)
         {
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user == null) return Unauthorized("Unauthorized");
             var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId == lessonUpdateDto.LessonId);
+
+            if (lesson == null) return BadRequest("Invalid lesson ID");
 
             if (!(userId == lesson.OwnerId)) return Unauthorized("User is not the owner");
             if (lessonUpdateDto.Title != null)
@@ -135,15 +138,18 @@ namespace Quizzler_Backend.Controllers
 
             if (lessonUpdateDto.Image != null)
             {
-                if (!await _globalService.IsImageRightSize(lessonUpdateDto.Image)) return BadRequest("The image size is too large"); 
-                using (var memoryStream = new MemoryStream())
+                if (!await _globalService.IsImageRightSize(lessonUpdateDto.Image)) return BadRequest("The image size is too large");
+                using var memoryStream = new MemoryStream();
+                await lessonUpdateDto.Image.CopyToAsync(memoryStream);
+                var newMedia = await _globalService.SaveImage(lessonUpdateDto.Image, _lessonService.GenerateImageName(lesson.Title), userId);
+                if (newMedia == null) return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+                if (lesson.Media != null)
                 {
-                    await lessonUpdateDto.Image.CopyToAsync(memoryStream);
-                    var newMedia = await _globalService.SaveImage(lessonUpdateDto.Image, _lessonService.GenerateImageName(lesson.Title), userId);
-                    if (newMedia == null) return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-                    lesson.Media = newMedia;
-                    _context.Media.Add(newMedia);
+                    _context.Remove(lesson.Media);
+                    await _globalService.DeleteImage(lesson.Media.Path);
                 }
+                lesson.Media = newMedia;
+                _context.Media.Add(newMedia);
             }
             if (lessonUpdateDto.TagNames != null)
             {
@@ -153,6 +159,12 @@ namespace Quizzler_Backend.Controllers
                     if (tagName == null) continue;
                     await _lessonService.AddLessonTag(tagName, lesson);
                 }
+            }
+            var tagsForDeletion = _context.Tag
+                .Where(t => t.LessonTags.Count == 0);
+            foreach (var tag in tagsForDeletion)
+            {
+                _context.Remove(tag);
             }
 
             await _context.SaveChangesAsync();
@@ -167,20 +179,22 @@ namespace Quizzler_Backend.Controllers
         public async Task<ActionResult<Lesson>> Delete(string lessonId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId.ToString() == lessonId) ;
-            try
+            var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId.ToString() == lessonId);
+            if (lesson == null) return NotFound("No lesson found");
+            if (!_globalService.IsUsersLesson(userId!, lesson)) return Unauthorized("Not user's lesson");
+            var lessonTags = lesson.LessonTags.FindAll(l => l.Tag.LessonTags.Count == 1);
+            foreach (var item in lessonTags)
             {
-                if (!_globalService.isItUssersLesson(userId, lesson)) return Unauthorized("Not user's lesson");
-                // Removes lesson from the database and save changes
-                _context.Lesson.Remove(lesson);
-                await _context.SaveChangesAsync();
-                return Ok("Lesson deleted successfully.");
-
+                _context.Remove(item.Tag);
             }
-            catch (Exception ex)
+            if (lesson.Media != null)
             {
-                return NotFound("No lesson found");
+                _context.Remove(lesson.Media);
+                await _globalService.DeleteImage(lesson.Media.Path);
             }
+            _context.Lesson.Remove(lesson);
+            await _context.SaveChangesAsync();
+            return Ok("Lesson deleted successfully.");
         }
     }
 }

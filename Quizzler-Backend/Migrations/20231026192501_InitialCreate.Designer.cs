@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Quizzler_Backend.Data;
 
 #nullable disable
 
@@ -16,7 +17,6 @@ namespace Quizzler_Backend.Migrations
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
-#pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "7.0.9")
                 .HasAnnotation("Proxies:ChangeTracking", false)
@@ -561,7 +561,6 @@ namespace Quizzler_Backend.Migrations
 
                     b.Navigation("Media");
                 });
-#pragma warning restore 612, 618
         }
     }
 }

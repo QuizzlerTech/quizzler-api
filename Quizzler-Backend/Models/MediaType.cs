@@ -9,10 +9,10 @@ namespace Quizzler_Backend.Models
 
         [Required]
         [StringLength(10)]
-        public string Extension { get; set; }
+        public string Extension { get; set; } = null!;
 
         [Required]
-        public string TypeName { get; set; }
+        public string TypeName { get; set; } = null!;
 
         [Required]
         public long MaxSize { get; set; }

@@ -18,8 +18,8 @@ namespace Quizzler_Backend.Models
         public int? QuestionMediaId { get; set; }
 
         [ForeignKey("QuizId")]
-        public virtual Quiz Quiz { get; set; }
-        public virtual Media Media { get; set; }
+        public virtual Quiz Quiz { get; set; } = null!;
+        public virtual Media Media { get; set; } = null!;
         public virtual List<Answer> Answers { get; set; } = new List<Answer>();
     }
 }

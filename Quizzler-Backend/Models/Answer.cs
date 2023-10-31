@@ -19,7 +19,7 @@ namespace Quizzler_Backend.Models
 
         public int? AnswerMediaId { get; set; }
 
-        public virtual Question Question { get; set; }
-        public virtual Media Media { get; set; }
+        public virtual Question Question { get; set; } = null!;
+        public virtual Media Media { get; set; } = null!;
     }
 }

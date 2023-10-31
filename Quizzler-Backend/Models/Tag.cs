@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Quizzler_Backend.Models
 {
@@ -10,7 +9,7 @@ namespace Quizzler_Backend.Models
 
         [Required]
         [StringLength(50)]
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         public virtual List<LessonTag> LessonTags { get; set; } = new List<LessonTag>();
     }

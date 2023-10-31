@@ -1,52 +1,41 @@
-﻿using System.Text.RegularExpressions;
-using System.Net.Mail;
-using System.Security.Cryptography;
-using System.Text;
-using Isopoh.Cryptography.Argon2;
-using MlkPwgen;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Quizzler_Backend.Data;
 using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Models;
-using Microsoft.AspNetCore.DataProtection;
-using Isopoh.Cryptography.SecureArray;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using Quizzler_Backend.Services;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net.Mail;
+using System.Security.Claims;
+using System.Text;
 
 namespace Quizzler_Backend.Controllers.Services
 {
     public class UserService
     {
-        // Field variables
         private readonly QuizzlerDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly GlobalService _globalService;
 
-        // Constructor
         public UserService(QuizzlerDbContext context, IConfiguration configuration, GlobalService globalService)
         {
             _context = context;
             _configuration = configuration;
             _globalService = globalService;
         }
-
-        // Check if email exists in the database
         public async Task<bool> EmailExists(string email)
         {
             return await _context.User.AnyAsync(u => u.Email == email);
         }
 
-        // Check if username exists in the database
         public async Task<bool> UsernameExists(string username)
         {
             return await _context.User.AnyAsync(u => u.Username == username);
         }
 
-        // Validate if entered login credentials are correct
         public async Task<bool> AreCredentialsCorrect(UserLoginDto userloginDto)
         {
-            var user = await _context.User.Include(u => u.LoginInfo).FirstOrDefaultAsync(u => u.Email == userloginDto.Email);
+            var user = await _context.User.Include(u => u.LoginInfo).FirstOrDefaultAsync(u => u.Email == userloginDto.Email) ?? throw new ArgumentNullException(nameof(userloginDto));
             string generatedPassword = _globalService.HashPassword(userloginDto.Password, user.LoginInfo.Salt);
             if (generatedPassword == user.LoginInfo.PasswordHash) return true;
             return false;
@@ -66,14 +55,11 @@ namespace Quizzler_Backend.Controllers.Services
             }
         }
 
-        // Validate password complexity
         public bool IsPasswordGoodEnough(string password)
         {
             return password.Length >= 8;
         }
 
-
-        // Create a new user
         public User CreateUser(UserRegisterDto userRegisterDto)
         {
             var user = new User
@@ -97,10 +83,10 @@ namespace Quizzler_Backend.Controllers.Services
             return user;
         }
 
-        // Generate a JWT token for a user
         public string GenerateJwtToken(User user)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtKey"]));
+            var jwtKey = _configuration["JwtKey"] ?? throw new InvalidOperationException("JwtKey configuration value is null or empty.");
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var claims = new[]
             {

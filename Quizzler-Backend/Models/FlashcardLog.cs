@@ -12,7 +12,7 @@ namespace Quizzler_Backend.Models
         public int? UserId { get; set; }
         public DateTime Date { get; set; }
         [ForeignKey("FlashcardId")]
-        public virtual Flashcard Flashcard { get; set; }
+        public virtual Flashcard Flashcard { get; set; } = null!;
         [ForeignKey("UserId")]
         public virtual User? User { get; set; }
     }

@@ -13,7 +13,7 @@ namespace Quizzler_Backend.Models
 
         [Required]
         [StringLength(40)]
-        public string Title { get; set; }
+        public string Title { get; set; } = null!;
 
         [Required]
         [StringLength(150)]
@@ -26,6 +26,6 @@ namespace Quizzler_Backend.Models
 
         public virtual List<Question> Questions { get; set; } = new List<Question>();
         [ForeignKey("QuizOwner")]
-        public virtual User Owner { get; set; }
+        public virtual User Owner { get; set; } = null!;
     }
 }
