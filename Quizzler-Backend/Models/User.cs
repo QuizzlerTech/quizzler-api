@@ -30,7 +30,7 @@ namespace Quizzler_Backend.Models
         [JsonIgnore]
         public virtual List<Lesson> Lesson { get; set; } = new List<Lesson>();
         [JsonIgnore]
-        public virtual List<Media> Media { get; set; } = new List<Media>();
+        public virtual List<Media> UserMedia { get; set; } = new List<Media>();
         [JsonIgnore]
         public virtual LoginInfo LoginInfo { get; set; } = null!;
         [JsonIgnore]

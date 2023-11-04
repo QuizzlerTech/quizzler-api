@@ -7,7 +7,7 @@ using MySql.EntityFrameworkCore.Metadata;
 namespace Quizzler_Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -66,6 +66,31 @@ namespace Quizzler_Backend.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Lesson",
+                columns: table => new
+                {
+                    LessonId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
+                    OwnerId = table.Column<int>(type: "int", nullable: false),
+                    IsPublic = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Title = table.Column<string>(type: "varchar(40)", maxLength: 40, nullable: false),
+                    Description = table.Column<string>(type: "varchar(150)", maxLength: 150, nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    LessonMediaId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Lesson", x => x.LessonId);
+                    table.ForeignKey(
+                        name: "FK_Lesson_User_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "User",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "LoginInfo",
                 columns: table => new
                 {
@@ -82,41 +107,6 @@ namespace Quizzler_Backend.Migrations
                         principalTable: "User",
                         principalColumn: "UserId",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "Media",
-                columns: table => new
-                {
-                    MediaId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    MediaTypeId = table.Column<int>(type: "int", nullable: false),
-                    UploaderId = table.Column<int>(type: "int", nullable: false),
-                    Path = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false),
-                    FileSize = table.Column<long>(type: "bigint", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Media", x => x.MediaId);
-                    table.ForeignKey(
-                        name: "FK_Media_MediaType_MediaTypeId",
-                        column: x => x.MediaTypeId,
-                        principalTable: "MediaType",
-                        principalColumn: "MediaTypeId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Media_User_UploaderId",
-                        column: x => x.UploaderId,
-                        principalTable: "User",
-                        principalColumn: "UserId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Media_User_UserId",
-                        column: x => x.UserId,
-                        principalTable: "User",
-                        principalColumn: "UserId");
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -140,66 +130,7 @@ namespace Quizzler_Backend.Migrations
                         column: x => x.QuizOwner,
                         principalTable: "User",
                         principalColumn: "UserId",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "Lesson",
-                columns: table => new
-                {
-                    LessonId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    OwnerId = table.Column<int>(type: "int", nullable: false),
-                    IsPublic = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    Title = table.Column<string>(type: "varchar(40)", maxLength: 40, nullable: false),
-                    Description = table.Column<string>(type: "varchar(150)", maxLength: 150, nullable: true),
-                    DateCreated = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    LessonMediaId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Lesson", x => x.LessonId);
-                    table.ForeignKey(
-                        name: "FK_Lesson_Media_LessonMediaId",
-                        column: x => x.LessonMediaId,
-                        principalTable: "Media",
-                        principalColumn: "MediaId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Lesson_User_OwnerId",
-                        column: x => x.OwnerId,
-                        principalTable: "User",
-                        principalColumn: "UserId",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "Question",
-                columns: table => new
-                {
-                    QuestionId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    QuizId = table.Column<int>(type: "int", nullable: false),
-                    QuestionText = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
-                    QuestionMediaId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Question", x => x.QuestionId);
-                    table.ForeignKey(
-                        name: "FK_Question_Media_QuestionMediaId",
-                        column: x => x.QuestionMediaId,
-                        principalTable: "Media",
-                        principalColumn: "MediaId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Question_Quiz_QuizId",
-                        column: x => x.QuizId,
-                        principalTable: "Quiz",
-                        principalColumn: "QuizId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -224,18 +155,6 @@ namespace Quizzler_Backend.Migrations
                         column: x => x.LessonId,
                         principalTable: "Lesson",
                         principalColumn: "LessonId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Flashcard_Media_AnswerMediaId",
-                        column: x => x.AnswerMediaId,
-                        principalTable: "Media",
-                        principalColumn: "MediaId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Flashcard_Media_QuestionMediaId",
-                        column: x => x.QuestionMediaId,
-                        principalTable: "Media",
-                        principalColumn: "MediaId",
                         onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
@@ -266,30 +185,23 @@ namespace Quizzler_Backend.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Answer",
+                name: "Question",
                 columns: table => new
                 {
-                    AnswerId = table.Column<int>(type: "int", nullable: false)
+                    QuestionId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    QuestionId = table.Column<int>(type: "int", nullable: false),
-                    AnswerText = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
-                    IsCorrect = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    AnswerMediaId = table.Column<int>(type: "int", nullable: true)
+                    QuizId = table.Column<int>(type: "int", nullable: false),
+                    QuestionText = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+                    QuestionMediaId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Answer", x => x.AnswerId);
+                    table.PrimaryKey("PK_Question", x => x.QuestionId);
                     table.ForeignKey(
-                        name: "FK_Answer_Media_AnswerMediaId",
-                        column: x => x.AnswerMediaId,
-                        principalTable: "Media",
-                        principalColumn: "MediaId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Answer_Question_QuestionId",
-                        column: x => x.QuestionId,
-                        principalTable: "Question",
-                        principalColumn: "QuestionId",
+                        name: "FK_Question_Quiz_QuizId",
+                        column: x => x.QuizId,
+                        principalTable: "Quiz",
+                        principalColumn: "QuizId",
                         onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
@@ -322,10 +234,99 @@ namespace Quizzler_Backend.Migrations
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Answer_AnswerMediaId",
-                table: "Answer",
-                column: "AnswerMediaId");
+            migrationBuilder.CreateTable(
+                name: "Answer",
+                columns: table => new
+                {
+                    AnswerId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
+                    QuestionId = table.Column<int>(type: "int", nullable: false),
+                    AnswerText = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+                    IsCorrect = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    AnswerMediaId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Answer", x => x.AnswerId);
+                    table.ForeignKey(
+                        name: "FK_Answer_Question_QuestionId",
+                        column: x => x.QuestionId,
+                        principalTable: "Question",
+                        principalColumn: "QuestionId",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Media",
+                columns: table => new
+                {
+                    MediaId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
+                    MediaTypeId = table.Column<int>(type: "int", nullable: false),
+                    UploaderId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false),
+                    FileSize = table.Column<long>(type: "bigint", nullable: false),
+                    AnswerId = table.Column<int>(type: "int", nullable: false),
+                    QuestionId = table.Column<int>(type: "int", nullable: false),
+                    LessonId = table.Column<int>(type: "int", nullable: false),
+                    FlashcardQuestionId = table.Column<int>(type: "int", nullable: false),
+                    FlashcardAnswerId = table.Column<int>(type: "int", nullable: false),
+                    QuizId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Media", x => x.MediaId);
+                    table.ForeignKey(
+                        name: "FK_Media_Answer_AnswerId",
+                        column: x => x.AnswerId,
+                        principalTable: "Answer",
+                        principalColumn: "AnswerId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Media_Flashcard_FlashcardAnswerId",
+                        column: x => x.FlashcardAnswerId,
+                        principalTable: "Flashcard",
+                        principalColumn: "FlashcardId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Media_Flashcard_FlashcardQuestionId",
+                        column: x => x.FlashcardQuestionId,
+                        principalTable: "Flashcard",
+                        principalColumn: "FlashcardId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Media_Lesson_LessonId",
+                        column: x => x.LessonId,
+                        principalTable: "Lesson",
+                        principalColumn: "LessonId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Media_MediaType_MediaTypeId",
+                        column: x => x.MediaTypeId,
+                        principalTable: "MediaType",
+                        principalColumn: "MediaTypeId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Media_Question_QuestionId",
+                        column: x => x.QuestionId,
+                        principalTable: "Question",
+                        principalColumn: "QuestionId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Media_Quiz_QuizId",
+                        column: x => x.QuizId,
+                        principalTable: "Quiz",
+                        principalColumn: "QuizId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Media_User_UploaderId",
+                        column: x => x.UploaderId,
+                        principalTable: "User",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Answer_QuestionId",
@@ -333,19 +334,9 @@ namespace Quizzler_Backend.Migrations
                 column: "QuestionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Flashcard_AnswerMediaId",
-                table: "Flashcard",
-                column: "AnswerMediaId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Flashcard_LessonId",
                 table: "Flashcard",
                 column: "LessonId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Flashcard_QuestionMediaId",
-                table: "Flashcard",
-                column: "QuestionMediaId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FlashcardLog_FlashcardId",
@@ -358,11 +349,6 @@ namespace Quizzler_Backend.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Lesson_LessonMediaId",
-                table: "Lesson",
-                column: "LessonMediaId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Lesson_OwnerId",
                 table: "Lesson",
                 column: "OwnerId");
@@ -373,24 +359,50 @@ namespace Quizzler_Backend.Migrations
                 column: "TagId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Media_AnswerId",
+                table: "Media",
+                column: "AnswerId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Media_FlashcardAnswerId",
+                table: "Media",
+                column: "FlashcardAnswerId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Media_FlashcardQuestionId",
+                table: "Media",
+                column: "FlashcardQuestionId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Media_LessonId",
+                table: "Media",
+                column: "LessonId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Media_MediaTypeId",
                 table: "Media",
                 column: "MediaTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Media_QuestionId",
+                table: "Media",
+                column: "QuestionId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Media_QuizId",
+                table: "Media",
+                column: "QuizId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Media_UploaderId",
                 table: "Media",
                 column: "UploaderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Media_UserId",
-                table: "Media",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Question_QuestionMediaId",
-                table: "Question",
-                column: "QuestionMediaId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Question_QuizId",
@@ -419,9 +431,6 @@ namespace Quizzler_Backend.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Answer");
-
-            migrationBuilder.DropTable(
                 name: "FlashcardLog");
 
             migrationBuilder.DropTable(
@@ -431,25 +440,28 @@ namespace Quizzler_Backend.Migrations
                 name: "LoginInfo");
 
             migrationBuilder.DropTable(
-                name: "Question");
-
-            migrationBuilder.DropTable(
-                name: "Flashcard");
+                name: "Media");
 
             migrationBuilder.DropTable(
                 name: "Tag");
 
             migrationBuilder.DropTable(
-                name: "Quiz");
+                name: "Answer");
+
+            migrationBuilder.DropTable(
+                name: "Flashcard");
+
+            migrationBuilder.DropTable(
+                name: "MediaType");
+
+            migrationBuilder.DropTable(
+                name: "Question");
 
             migrationBuilder.DropTable(
                 name: "Lesson");
 
             migrationBuilder.DropTable(
-                name: "Media");
-
-            migrationBuilder.DropTable(
-                name: "MediaType");
+                name: "Quiz");
 
             migrationBuilder.DropTable(
                 name: "User");

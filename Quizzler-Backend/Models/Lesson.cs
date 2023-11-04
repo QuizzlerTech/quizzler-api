@@ -23,14 +23,12 @@ namespace Quizzler_Backend.Models
 
         public DateTime DateCreated { get; set; }
         public int? LessonMediaId { get; set; } = null;
-
         public virtual List<Flashcard> Flashcards { get; set; } = new List<Flashcard>();
         public virtual List<LessonTag> LessonTags { get; set; } = new List<LessonTag>();
 
         [ForeignKey("OwnerId")]
         public virtual User Owner { get; set; } = null!;
-        [ForeignKey("LessonMediaId")]
-        public virtual Media? Media { get; set; }
+        public virtual Media? LessonMedia { get; set; }
     }
 }
 

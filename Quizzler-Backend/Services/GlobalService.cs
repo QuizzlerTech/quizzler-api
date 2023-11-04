@@ -41,7 +41,7 @@ namespace Quizzler_Backend.Services
                 {
                     MediaTypeId = imageMediaType.MediaTypeId,
                     UploaderId = uploaderId,
-                    Path = fileName,
+                    Name = fileName,
                     FileSize = file.Length
                 };
 

@@ -47,7 +47,7 @@ namespace Quizzler_Backend.Controllers
                 LessonId = lesson.LessonId,
                 Title = lesson.Title,
                 Description = lesson.Description,
-                ImagePath = lesson.Media?.Path,
+                ImagePath = lesson.LessonMedia?.Name,
                 DateCreated = lesson.DateCreated,
                 IsPublic = lesson.IsPublic,
                 Tags = lesson.LessonTags.Select(l => l.Tag.Name).ToList(),
@@ -57,8 +57,8 @@ namespace Quizzler_Backend.Controllers
                     DateCreated = f.DateCreated,
                     QuestionText = f.QuestionText,
                     AnswerText = f.AnswerText,
-                    QuestionImagePath = f.QuestionMedia?.Path,
-                    AnswerImagePath = f.AnswerMedia?.Path
+                    QuestionImageName = f.QuestionMedia?.Name,
+                    AnswerImageName = f.AnswerMedia?.Name
                 }).ToList()
             };
 
@@ -90,7 +90,7 @@ namespace Quizzler_Backend.Controllers
                 var newMedia = await _globalService.SaveImage(lessonAddDto.Image, _lessonService.GenerateImageName(lessonAddDto.Title), userId);
                 if (newMedia == null) return StatusCode(500, "Error saving image");
                 _context.Media.Add(newMedia);
-                lesson.Media = newMedia;
+                lesson.LessonMedia = newMedia;
             }
 
             if (lessonAddDto.TagNames != null)
@@ -143,12 +143,11 @@ namespace Quizzler_Backend.Controllers
                 await lessonUpdateDto.Image.CopyToAsync(memoryStream);
                 var newMedia = await _globalService.SaveImage(lessonUpdateDto.Image, _lessonService.GenerateImageName(lesson.Title), userId);
                 if (newMedia == null) return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-                if (lesson.Media != null)
+                if (lesson.LessonMedia != null)
                 {
-                    _context.Remove(lesson.Media);
-                    await _globalService.DeleteImage(lesson.Media.Path);
+                    await _globalService.DeleteImage(lesson.LessonMedia.Name);
                 }
-                lesson.Media = newMedia;
+                lesson.LessonMedia = newMedia;
                 _context.Media.Add(newMedia);
             }
             if (lessonUpdateDto.TagNames != null)
@@ -187,10 +186,9 @@ namespace Quizzler_Backend.Controllers
             {
                 _context.Remove(item.Tag);
             }
-            if (lesson.Media != null)
+            if (lesson.LessonMedia != null)
             {
-                _context.Remove(lesson.Media);
-                await _globalService.DeleteImage(lesson.Media.Path);
+                await _globalService.DeleteImage(lesson.LessonMedia.Name);
             }
             _context.Lesson.Remove(lesson);
             await _context.SaveChangesAsync();

@@ -11,12 +11,13 @@ using Quizzler_Backend.Data;
 namespace Quizzler_Backend.Migrations
 {
     [DbContext(typeof(QuizzlerDbContext))]
-    [Migration("20231026192501_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20231104153457_initialCreate")]
+    partial class initialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
+#pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "7.0.9")
                 .HasAnnotation("Proxies:ChangeTracking", false)
@@ -45,8 +46,6 @@ namespace Quizzler_Backend.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("AnswerId");
-
-                    b.HasIndex("AnswerMediaId");
 
                     b.HasIndex("QuestionId");
 
@@ -81,11 +80,7 @@ namespace Quizzler_Backend.Migrations
 
                     b.HasKey("FlashcardId");
 
-                    b.HasIndex("AnswerMediaId");
-
                     b.HasIndex("LessonId");
-
-                    b.HasIndex("QuestionMediaId");
 
                     b.ToTable("Flashcard");
                 });
@@ -146,8 +141,6 @@ namespace Quizzler_Backend.Migrations
 
                     b.HasKey("LessonId");
 
-                    b.HasIndex("LessonMediaId");
-
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Lesson");
@@ -194,30 +187,67 @@ namespace Quizzler_Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<int?>("AnswerId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
+
+                    b.Property<int?>("FlashcardAnswerId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FlashcardQuestionId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LessonId")
+                        .IsRequired()
+                        .HasColumnType("int");
 
                     b.Property<int>("MediaTypeId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Path")
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("QuestionId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.Property<int?>("QuizId")
+                        .IsRequired()
+                        .HasColumnType("int");
 
                     b.Property<int>("UploaderId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("MediaId");
+
+                    b.HasIndex("AnswerId")
+                        .IsUnique();
+
+                    b.HasIndex("FlashcardAnswerId")
+                        .IsUnique();
+
+                    b.HasIndex("FlashcardQuestionId")
+                        .IsUnique();
+
+                    b.HasIndex("LessonId")
+                        .IsUnique();
 
                     b.HasIndex("MediaTypeId");
 
-                    b.HasIndex("UploaderId");
+                    b.HasIndex("QuestionId")
+                        .IsUnique();
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("QuizId")
+                        .IsUnique();
+
+                    b.HasIndex("UploaderId");
 
                     b.ToTable("Media");
                 });
@@ -263,8 +293,6 @@ namespace Quizzler_Backend.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("QuestionId");
-
-                    b.HasIndex("QuestionMediaId");
 
                     b.HasIndex("QuizId");
 
@@ -365,45 +393,24 @@ namespace Quizzler_Backend.Migrations
 
             modelBuilder.Entity("Quizzler_Backend.Models.Answer", b =>
                 {
-                    b.HasOne("Quizzler_Backend.Models.Media", "Media")
-                        .WithMany()
-                        .HasForeignKey("AnswerMediaId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("Quizzler_Backend.Models.Question", "Question")
                         .WithMany("Answers")
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Media");
-
                     b.Navigation("Question");
                 });
 
             modelBuilder.Entity("Quizzler_Backend.Models.Flashcard", b =>
                 {
-                    b.HasOne("Quizzler_Backend.Models.Media", "AnswerMedia")
-                        .WithMany()
-                        .HasForeignKey("AnswerMediaId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("Quizzler_Backend.Models.Lesson", "Lesson")
                         .WithMany("Flashcards")
                         .HasForeignKey("LessonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Quizzler_Backend.Models.Media", "QuestionMedia")
-                        .WithMany()
-                        .HasForeignKey("QuestionMediaId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("AnswerMedia");
-
                     b.Navigation("Lesson");
-
-                    b.Navigation("QuestionMedia");
                 });
 
             modelBuilder.Entity("Quizzler_Backend.Models.FlashcardLog", b =>
@@ -425,18 +432,11 @@ namespace Quizzler_Backend.Migrations
 
             modelBuilder.Entity("Quizzler_Backend.Models.Lesson", b =>
                 {
-                    b.HasOne("Quizzler_Backend.Models.Media", "Media")
-                        .WithMany()
-                        .HasForeignKey("LessonMediaId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("Quizzler_Backend.Models.User", "Owner")
                         .WithMany("Lesson")
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Media");
 
                     b.Navigation("Owner");
                 });
@@ -473,41 +473,78 @@ namespace Quizzler_Backend.Migrations
 
             modelBuilder.Entity("Quizzler_Backend.Models.Media", b =>
                 {
+                    b.HasOne("Quizzler_Backend.Models.Answer", "Answer")
+                        .WithOne("AnswerMedia")
+                        .HasForeignKey("Quizzler_Backend.Models.Media", "AnswerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Quizzler_Backend.Models.Flashcard", "FlashcardAnswer")
+                        .WithOne("AnswerMedia")
+                        .HasForeignKey("Quizzler_Backend.Models.Media", "FlashcardAnswerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Quizzler_Backend.Models.Flashcard", "FlashcardQuestion")
+                        .WithOne("QuestionMedia")
+                        .HasForeignKey("Quizzler_Backend.Models.Media", "FlashcardQuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Quizzler_Backend.Models.Lesson", "Lesson")
+                        .WithOne("LessonMedia")
+                        .HasForeignKey("Quizzler_Backend.Models.Media", "LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Quizzler_Backend.Models.MediaType", "MediaType")
                         .WithMany()
                         .HasForeignKey("MediaTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Quizzler_Backend.Models.Question", "Question")
+                        .WithOne("QuestionMedia")
+                        .HasForeignKey("Quizzler_Backend.Models.Media", "QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Quizzler_Backend.Models.Quiz", "Quiz")
+                        .WithOne("QuizMedia")
+                        .HasForeignKey("Quizzler_Backend.Models.Media", "QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Quizzler_Backend.Models.User", "Uploader")
-                        .WithMany()
+                        .WithMany("UserMedia")
                         .HasForeignKey("UploaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Quizzler_Backend.Models.User", null)
-                        .WithMany("Media")
-                        .HasForeignKey("UserId");
+                    b.Navigation("Answer");
+
+                    b.Navigation("FlashcardAnswer");
+
+                    b.Navigation("FlashcardQuestion");
+
+                    b.Navigation("Lesson");
 
                     b.Navigation("MediaType");
+
+                    b.Navigation("Question");
+
+                    b.Navigation("Quiz");
 
                     b.Navigation("Uploader");
                 });
 
             modelBuilder.Entity("Quizzler_Backend.Models.Question", b =>
                 {
-                    b.HasOne("Quizzler_Backend.Models.Media", "Media")
-                        .WithMany()
-                        .HasForeignKey("QuestionMediaId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("Quizzler_Backend.Models.Quiz", "Quiz")
                         .WithMany("Questions")
                         .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Media");
 
                     b.Navigation("Quiz");
                 });
@@ -517,20 +554,31 @@ namespace Quizzler_Backend.Migrations
                     b.HasOne("Quizzler_Backend.Models.User", "Owner")
                         .WithMany()
                         .HasForeignKey("QuizOwner")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("Quizzler_Backend.Models.Answer", b =>
+                {
+                    b.Navigation("AnswerMedia");
+                });
+
             modelBuilder.Entity("Quizzler_Backend.Models.Flashcard", b =>
                 {
+                    b.Navigation("AnswerMedia");
+
                     b.Navigation("FlashcardLog");
+
+                    b.Navigation("QuestionMedia");
                 });
 
             modelBuilder.Entity("Quizzler_Backend.Models.Lesson", b =>
                 {
                     b.Navigation("Flashcards");
+
+                    b.Navigation("LessonMedia");
 
                     b.Navigation("LessonTags");
                 });
@@ -538,11 +586,15 @@ namespace Quizzler_Backend.Migrations
             modelBuilder.Entity("Quizzler_Backend.Models.Question", b =>
                 {
                     b.Navigation("Answers");
+
+                    b.Navigation("QuestionMedia");
                 });
 
             modelBuilder.Entity("Quizzler_Backend.Models.Quiz", b =>
                 {
                     b.Navigation("Questions");
+
+                    b.Navigation("QuizMedia");
                 });
 
             modelBuilder.Entity("Quizzler_Backend.Models.Tag", b =>
@@ -559,8 +611,9 @@ namespace Quizzler_Backend.Migrations
                     b.Navigation("LoginInfo")
                         .IsRequired();
 
-                    b.Navigation("Media");
+                    b.Navigation("UserMedia");
                 });
+#pragma warning restore 612, 618
         }
     }
 }

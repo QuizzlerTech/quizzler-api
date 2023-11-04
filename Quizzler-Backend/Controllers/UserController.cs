@@ -112,7 +112,7 @@ namespace Quizzler_Backend.Controllers
                                  LessonId = l.LessonId,
                                  Title = l.Title,
                                  Description = l.Description,
-                                 ImagePath = l.Media?.Path,
+                                 ImagePath = l.LessonMedia?.Name,
                                  DateCreated = l.DateCreated,
                                  IsPublic = l.IsPublic,
                                  Tags = l.LessonTags.Select(l => l.Tag.Name).ToList(),

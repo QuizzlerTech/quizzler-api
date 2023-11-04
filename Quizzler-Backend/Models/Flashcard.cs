@@ -27,9 +27,7 @@ namespace Quizzler_Backend.Models
         [ForeignKey("LessonId")]
         [JsonIgnore]
         public virtual Lesson Lesson { get; set; } = null!;
-        [ForeignKey("QuestionMediaId")]
         public virtual Media? QuestionMedia { get; set; }
-        [ForeignKey("AnswerMediaId")]
         public virtual Media? AnswerMedia { get; set; }
         public virtual List<FlashcardLog>? FlashcardLog { get; set; }
     }

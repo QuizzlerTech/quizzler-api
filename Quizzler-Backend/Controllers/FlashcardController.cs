@@ -104,7 +104,7 @@ namespace Quizzler_Backend.Controllers
                 await flashcardUpdateDto.QuestionImage.CopyToAsync(memoryStream);
                 var newMedia = await _globalService.SaveImage(flashcardUpdateDto.QuestionImage, _flashcardService.GenerateImageName(), userId);
                 if (newMedia == null) return StatusCode(500, "Error saving image");
-                if (flashcard.QuestionMedia != null) await _globalService.DeleteImage(flashcard.QuestionMedia.Path);
+                if (flashcard.QuestionMedia != null) await _globalService.DeleteImage(flashcard.QuestionMedia.Name);
                 _context.Media.Add(newMedia);
                 flashcard.QuestionMedia = newMedia;
             }
@@ -118,7 +118,7 @@ namespace Quizzler_Backend.Controllers
                 if (flashcard.AnswerMedia != null)
                 {
                     _context.Remove(flashcard.AnswerMedia);
-                    await _globalService.DeleteImage(flashcard.AnswerMedia.Path);
+                    await _globalService.DeleteImage(flashcard.AnswerMedia.Name);
                 }
                 _context.Media.Add(newMedia);
                 flashcard.AnswerMedia = newMedia;
@@ -144,8 +144,8 @@ namespace Quizzler_Backend.Controllers
             var lesson = flashcard.Lesson;
             if (!_globalService.IsUsersLesson(userId, lesson)) return Unauthorized("Not user's lesson");
             // Removes flashcard from the database and save changes
-            if (flashcard.QuestionMedia != null) await _globalService.DeleteImage(flashcard.QuestionMedia.Path);
-            if (flashcard.AnswerMedia != null) await _globalService.DeleteImage(flashcard.AnswerMedia.Path);
+            if (flashcard.QuestionMedia != null) await _globalService.DeleteImage(flashcard.QuestionMedia.Name);
+            if (flashcard.AnswerMedia != null) await _globalService.DeleteImage(flashcard.AnswerMedia.Name);
             _context.Flashcard.Remove(flashcard);
 
             await _context.SaveChangesAsync();

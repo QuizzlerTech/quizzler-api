@@ -70,7 +70,7 @@ namespace Quizzler_Backend.Controllers.Services
                 LastName = userRegisterDto.LastName,
                 DateRegistered = DateTime.UtcNow,
                 LastSeen = DateTime.UtcNow,
-                Media = new List<Media>(),
+                UserMedia = new List<Media>(),
                 Lesson = new List<Lesson>(),
                 LoginInfo = new LoginInfo
                 {
