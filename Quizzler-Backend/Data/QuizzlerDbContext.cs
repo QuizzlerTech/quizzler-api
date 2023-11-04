@@ -38,7 +38,7 @@ namespace Quizzler_Backend.Data
                 entity.HasOne(e => e.Owner)
                       .WithMany()
                       .HasForeignKey(e => e.QuizOwner)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Question Configuration
@@ -71,16 +71,22 @@ namespace Quizzler_Backend.Data
                 entity.Property(e => e.UploaderId).IsRequired();
                 entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
                 entity.Property(e => e.FileSize).IsRequired();
+                entity.Property(e => e.AnswerId).IsRequired(false);
+                entity.Property(e => e.QuestionId).IsRequired(false);
+                entity.Property(e => e.LessonId).IsRequired(false);
+                entity.Property(e => e.FlashcardQuestionId).IsRequired(false);
+                entity.Property(e => e.FlashcardAnswerId).IsRequired(false);
+                entity.Property(e => e.QuizId).IsRequired(false);
 
                 entity.HasOne(e => e.MediaType)
                       .WithMany()
                       .HasForeignKey(e => e.MediaTypeId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(e => e.Uploader)
                       .WithMany(u => u.UserMedia)
                       .HasForeignKey(e => e.UploaderId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(m => m.Answer)
                       .WithOne(a => a.AnswerMedia)
@@ -134,7 +140,7 @@ namespace Quizzler_Backend.Data
                 entity.HasOne(l => l.Owner)
                       .WithMany(u => u.Lesson)
                       .HasForeignKey(e => e.OwnerId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Flashcard Configuration

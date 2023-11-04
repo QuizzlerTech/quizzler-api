@@ -28,9 +28,6 @@ namespace Quizzler_Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int?>("AnswerMediaId")
-                        .HasColumnType("int");
-
                     b.Property<string>("AnswerText")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -55,9 +52,6 @@ namespace Quizzler_Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int?>("AnswerMediaId")
-                        .HasColumnType("int");
-
                     b.Property<string>("AnswerText")
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
@@ -66,9 +60,6 @@ namespace Quizzler_Backend.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("LessonId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("QuestionMediaId")
                         .HasColumnType("int");
 
                     b.Property<string>("QuestionText")
@@ -124,9 +115,6 @@ namespace Quizzler_Backend.Migrations
 
                     b.Property<bool>("IsPublic")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<int?>("LessonMediaId")
-                        .HasColumnType("int");
 
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
@@ -185,22 +173,18 @@ namespace Quizzler_Backend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("AnswerId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
 
                     b.Property<int?>("FlashcardAnswerId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int?>("FlashcardQuestionId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int?>("LessonId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int>("MediaTypeId")
@@ -212,11 +196,9 @@ namespace Quizzler_Backend.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<int?>("QuestionId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int?>("QuizId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int>("UploaderId")
@@ -276,9 +258,6 @@ namespace Quizzler_Backend.Migrations
                 {
                     b.Property<int>("QuestionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int?>("QuestionMediaId")
                         .HasColumnType("int");
 
                     b.Property<string>("QuestionText")
@@ -432,7 +411,7 @@ namespace Quizzler_Backend.Migrations
                     b.HasOne("Quizzler_Backend.Models.User", "Owner")
                         .WithMany("Lesson")
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Owner");
@@ -497,7 +476,7 @@ namespace Quizzler_Backend.Migrations
                     b.HasOne("Quizzler_Backend.Models.MediaType", "MediaType")
                         .WithMany()
                         .HasForeignKey("MediaTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Quizzler_Backend.Models.Question", "Question")
@@ -515,7 +494,7 @@ namespace Quizzler_Backend.Migrations
                     b.HasOne("Quizzler_Backend.Models.User", "Uploader")
                         .WithMany("UserMedia")
                         .HasForeignKey("UploaderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Answer");
@@ -551,7 +530,7 @@ namespace Quizzler_Backend.Migrations
                     b.HasOne("Quizzler_Backend.Models.User", "Owner")
                         .WithMany()
                         .HasForeignKey("QuizOwner")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Owner");

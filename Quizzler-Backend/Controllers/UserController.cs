@@ -101,7 +101,10 @@ namespace Quizzler_Backend.Controllers
         [HttpGet("{id}/lessons")]
         public async Task<ActionResult<ICollection<LessonInfoSendDto>>> GetUserLessonsById(int id)
         {
-            var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == id);
+            var user = await _context.User
+                .Include(u => u.Lesson)
+                    .ThenInclude(l => l.LessonMedia)
+                .FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null) return NotFound("No user found");
 
             bool isItLoggedUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == id.ToString();
@@ -210,8 +213,6 @@ namespace Quizzler_Backend.Controllers
                 return Unauthorized("Invalid credentials");
 
             // Email checks
-            if (string.IsNullOrWhiteSpace(userUpdateDto.Email))
-                return BadRequest("Email cannot be empty.");
 
             if (userUpdateDto.Email != null && userUpdateDto.Email != user.Email && await _userService.EmailExists(userUpdateDto.Email))
                 return Conflict($"Email {userUpdateDto.Email} already registered");

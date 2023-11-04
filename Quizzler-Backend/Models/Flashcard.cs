@@ -17,18 +17,16 @@ namespace Quizzler_Backend.Models
         [StringLength(200)]
         public string? QuestionText { get; set; }
 
-        public int? QuestionMediaId { get; set; }
 
         [StringLength(200)]
         public string? AnswerText { get; set; }
 
-        public int? AnswerMediaId { get; set; }
 
         [ForeignKey("LessonId")]
         [JsonIgnore]
         public virtual Lesson Lesson { get; set; } = null!;
         public virtual Media? QuestionMedia { get; set; }
         public virtual Media? AnswerMedia { get; set; }
-        public virtual List<FlashcardLog>? FlashcardLog { get; set; }
+        public virtual ICollection<FlashcardLog>? FlashcardLog { get; set; }
     }
 }

@@ -74,7 +74,7 @@ namespace Quizzler_Backend.Controllers
         public async Task<ActionResult<Flashcard>> UpdateFlashcard([FromForm] FlashcardUpdateDto flashcardUpdateDto)
         {
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var flashcard = await _context.Flashcard.FirstOrDefaultAsync(f => f.FlashcardId == flashcardUpdateDto.FlashcardId);
+            var flashcard = await _context.Flashcard.Include(f => f.Lesson).FirstOrDefaultAsync(f => f.FlashcardId == flashcardUpdateDto.FlashcardId);
             if (flashcard == null) return NotFound("Not found the flashcard");
             if (flashcard.Lesson.OwnerId != userId) return Unauthorized("User is not the owner of the lesson");
             flashcard.QuestionText = flashcardUpdateDto.QuestionText ?? flashcard.QuestionText;
@@ -86,14 +86,12 @@ namespace Quizzler_Backend.Controllers
             if (Request.Form.ContainsKey("QuestionImage") && flashcardUpdateDto.QuestionImage is null && flashcard.QuestionMedia != null)
             {
                 var media = flashcard.QuestionMedia;
-                flashcard.QuestionMediaId = null;
                 flashcard.QuestionMedia = null;
                 _context.Media.Remove(media);
             }
             if (Request.Form.ContainsKey("AnswerImage") && flashcardUpdateDto.AnswerImage is null && flashcard.AnswerMedia != null)
             {
                 var media = flashcard.AnswerMedia;
-                flashcard.AnswerMediaId = null;
                 flashcard.AnswerMedia = null;
                 _context.Media.Remove(media);
             }
@@ -138,7 +136,7 @@ namespace Quizzler_Backend.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return Unauthorized("No user found");
-            var flashcard = await _context.Flashcard.FirstOrDefaultAsync(f => f.FlashcardId.ToString() == flashcardId);
+            var flashcard = await _context.Flashcard.Include(f => f.Lesson).FirstOrDefaultAsync(f => f.FlashcardId.ToString() == flashcardId);
             if (flashcard == null) return NotFound("No flashcard found");
 
             var lesson = flashcard.Lesson;

@@ -28,13 +28,13 @@ namespace Quizzler_Backend.Models
 
         public int? Avatar { get; set; }
         [JsonIgnore]
-        public virtual List<Lesson> Lesson { get; set; } = new List<Lesson>();
+        public virtual ICollection<Lesson> Lesson { get; set; } = new List<Lesson>();
         [JsonIgnore]
-        public virtual List<Media> UserMedia { get; set; } = new List<Media>();
+        public virtual ICollection<Media> UserMedia { get; set; } = new List<Media>();
         [JsonIgnore]
         public virtual LoginInfo LoginInfo { get; set; } = null!;
         [JsonIgnore]
-        public virtual List<FlashcardLog> FlashcardLog { get; set; } = new List<FlashcardLog>();
+        public virtual ICollection<FlashcardLog> FlashcardLog { get; set; } = new List<FlashcardLog>();
 
     }
 }

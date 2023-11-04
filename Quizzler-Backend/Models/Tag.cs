@@ -10,6 +10,6 @@ namespace Quizzler_Backend.Models
         [Required]
         [StringLength(50)]
         public string Name { get; set; } = null!;
-        public virtual List<LessonTag> LessonTags { get; set; } = new List<LessonTag>();
+        public virtual ICollection<LessonTag> LessonTags { get; set; } = new List<LessonTag>();
     }
 }

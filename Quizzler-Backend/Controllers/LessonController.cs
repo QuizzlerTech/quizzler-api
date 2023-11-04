@@ -37,7 +37,11 @@ namespace Quizzler_Backend.Controllers
         public async Task<ActionResult<LessonSendDto>> GetLessonById(int id)
         {
             var lesson = await _context.Lesson
+                                       .Include(l => l.LessonMedia)
                                        .Include(l => l.Flashcards)
+                                            .ThenInclude(f => f.AnswerMedia)
+                                       .Include(l => l.Flashcards)
+                                            .ThenInclude(f => f.QuestionMedia)
                                        .FirstOrDefaultAsync(u => u.LessonId == id);
 
             if (lesson == null) return NotFound();
@@ -47,7 +51,7 @@ namespace Quizzler_Backend.Controllers
                 LessonId = lesson.LessonId,
                 Title = lesson.Title,
                 Description = lesson.Description,
-                ImagePath = lesson.LessonMedia?.Name,
+                ImageName = lesson.LessonMedia?.Name,
                 DateCreated = lesson.DateCreated,
                 IsPublic = lesson.IsPublic,
                 Tags = lesson.LessonTags.Select(l => l.Tag.Name).ToList(),
@@ -117,8 +121,9 @@ namespace Quizzler_Backend.Controllers
         {
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == userId);
-            if (user == null) return Unauthorized("Unauthorized");
             var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId == lessonUpdateDto.LessonId);
+
+            if (user == null) return Unauthorized("Unauthorized");
 
             if (lesson == null) return BadRequest("Invalid lesson ID");
 
@@ -181,7 +186,7 @@ namespace Quizzler_Backend.Controllers
             var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId.ToString() == lessonId);
             if (lesson == null) return NotFound("No lesson found");
             if (!_globalService.IsUsersLesson(userId!, lesson)) return Unauthorized("Not user's lesson");
-            var lessonTags = lesson.LessonTags.FindAll(l => l.Tag.LessonTags.Count == 1);
+            var lessonTags = lesson.LessonTags.Where(l => l.Tag.LessonTags.Count == 1);
             foreach (var item in lessonTags)
             {
                 _context.Remove(item.Tag);

@@ -22,9 +22,8 @@ namespace Quizzler_Backend.Models
         public string? Description { get; set; }
 
         public DateTime DateCreated { get; set; }
-        public int? LessonMediaId { get; set; } = null;
-        public virtual List<Flashcard> Flashcards { get; set; } = new List<Flashcard>();
-        public virtual List<LessonTag> LessonTags { get; set; } = new List<LessonTag>();
+        public virtual ICollection<Flashcard> Flashcards { get; set; } = new List<Flashcard>();
+        public virtual ICollection<LessonTag> LessonTags { get; set; } = new List<LessonTag>();
 
         [ForeignKey("OwnerId")]
         public virtual User Owner { get; set; } = null!;

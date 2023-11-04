@@ -17,8 +17,6 @@ namespace Quizzler_Backend.Models
         [Required]
         public bool IsCorrect { get; set; }
 
-        public int? AnswerMediaId { get; set; }
-
         public virtual Question Question { get; set; } = null!;
         public virtual Media? AnswerMedia { get; set; } = null!;
     }

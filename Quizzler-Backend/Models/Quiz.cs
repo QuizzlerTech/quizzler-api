@@ -24,7 +24,7 @@ namespace Quizzler_Backend.Models
 
         public DateTime DateCreated { get; set; }
 
-        public virtual List<Question> Questions { get; set; } = new List<Question>();
+        public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
         [ForeignKey("QuizOwner")]
         public virtual User Owner { get; set; } = null!;
         public virtual Media? QuizMedia { get; set; }

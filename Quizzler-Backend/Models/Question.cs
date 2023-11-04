@@ -15,11 +15,10 @@ namespace Quizzler_Backend.Models
         [StringLength(255)]
         public string? QuestionText { get; set; }
 
-        public int? QuestionMediaId { get; set; }
 
         [ForeignKey("QuizId")]
         public virtual Quiz Quiz { get; set; } = null!;
         public virtual Media? QuestionMedia { get; set; } = null!;
-        public virtual List<Answer> Answers { get; set; } = new List<Answer>();
+        public virtual ICollection<Answer> Answers { get; set; } = new List<Answer>();
     }
 }
