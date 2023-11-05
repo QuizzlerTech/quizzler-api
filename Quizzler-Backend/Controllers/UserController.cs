@@ -104,8 +104,12 @@ namespace Quizzler_Backend.Controllers
             var user = await _context.User
                 .Include(u => u.Lesson)
                     .ThenInclude(l => l.LessonMedia)
+                .Include(u => u.Lesson)
+                    .ThenInclude(l => l.Flashcards)
                 .FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null) return NotFound("No user found");
+
+
 
             bool isItLoggedUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == id.ToString();
             var result = user.Lesson
@@ -115,11 +119,11 @@ namespace Quizzler_Backend.Controllers
                                  LessonId = l.LessonId,
                                  Title = l.Title,
                                  Description = l.Description,
-                                 ImagePath = l.LessonMedia?.Name,
+                                 ImageName = l.LessonMedia?.Name,
                                  DateCreated = l.DateCreated,
                                  IsPublic = l.IsPublic,
-                                 Tags = l.LessonTags.Select(l => l.Tag.Name).ToList(),
-                                 FlashcardCount = l.Flashcards.Count,
+                                 Tags = _context.Entry(l).Collection(l => l.LessonTags).Query().Select(t => t.Tag).Select(t => t.Name).ToList(),
+                                 FlashcardCount = _context.Entry(l).Collection(l => l.Flashcards).Query().Count(),
                              })
                              .ToList();
 
@@ -133,7 +137,10 @@ namespace Quizzler_Backend.Controllers
         public async Task<ActionResult<List<DateTime>>> GetUserFlashcardsCreationDates()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+            var user = await _context.User
+                .Include(u => u.Lesson)
+                .ThenInclude(f => f.Flashcards)
+                .FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
             var flashcardDates = user!.Lesson.SelectMany(f => f.Flashcards).Select(d => d.DateCreated).ToList();
             return flashcardDates;
         }

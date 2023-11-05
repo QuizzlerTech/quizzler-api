@@ -74,7 +74,11 @@ namespace Quizzler_Backend.Controllers
         public async Task<ActionResult<Flashcard>> UpdateFlashcard([FromForm] FlashcardUpdateDto flashcardUpdateDto)
         {
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var flashcard = await _context.Flashcard.Include(f => f.Lesson).FirstOrDefaultAsync(f => f.FlashcardId == flashcardUpdateDto.FlashcardId);
+            var flashcard = await _context.Flashcard
+                .Include(f => f.Lesson)
+                .Include(f => f.QuestionMedia)
+                .Include(f => f.AnswerMedia)
+                .FirstOrDefaultAsync(f => f.FlashcardId == flashcardUpdateDto.FlashcardId);
             if (flashcard == null) return NotFound("Not found the flashcard");
             if (flashcard.Lesson.OwnerId != userId) return Unauthorized("User is not the owner of the lesson");
             flashcard.QuestionText = flashcardUpdateDto.QuestionText ?? flashcard.QuestionText;
@@ -140,7 +144,7 @@ namespace Quizzler_Backend.Controllers
             if (flashcard == null) return NotFound("No flashcard found");
 
             var lesson = flashcard.Lesson;
-            if (!_globalService.IsUsersLesson(userId, lesson)) return Unauthorized("Not user's lesson");
+            if (userId != flashcard.Lesson.OwnerId.ToString()) return Unauthorized("Not user's lesson");
             // Removes flashcard from the database and save changes
             if (flashcard.QuestionMedia != null) await _globalService.DeleteImage(flashcard.QuestionMedia.Name);
             if (flashcard.AnswerMedia != null) await _globalService.DeleteImage(flashcard.AnswerMedia.Name);

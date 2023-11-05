@@ -121,10 +121,9 @@ namespace Quizzler_Backend.Controllers
         {
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var user = await _context.User.Include(u => u.Lesson).FirstOrDefaultAsync(u => u.UserId == userId);
-            var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId == lessonUpdateDto.LessonId);
+            var lesson = await _context.Lesson.Include(l => l.LessonMedia).FirstOrDefaultAsync(u => u.LessonId == lessonUpdateDto.LessonId);
 
             if (user == null) return Unauthorized("Unauthorized");
-
             if (lesson == null) return BadRequest("Invalid lesson ID");
 
             if (!(userId == lesson.OwnerId)) return Unauthorized("User is not the owner");
@@ -140,6 +139,13 @@ namespace Quizzler_Backend.Controllers
                 lesson.Description = lessonUpdateDto.Description;
             }
             lesson.IsPublic = lessonUpdateDto.IsPublic ?? lesson.IsPublic;
+
+            if (Request.Form.ContainsKey("Image") && lessonUpdateDto.Image is null && lesson.LessonMedia != null)
+            {
+                var media = lesson.LessonMedia;
+                lesson.LessonMedia = null;
+                _context.Media.Remove(media);
+            }
 
             if (lessonUpdateDto.Image != null)
             {
@@ -185,7 +191,7 @@ namespace Quizzler_Backend.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId.ToString() == lessonId);
             if (lesson == null) return NotFound("No lesson found");
-            if (!_globalService.IsUsersLesson(userId!, lesson)) return Unauthorized("Not user's lesson");
+            if (userId == lesson.OwnerId.ToString()) return Unauthorized("Not user's lesson");
             var lessonTags = lesson.LessonTags.Where(l => l.Tag.LessonTags.Count == 1);
             foreach (var item in lessonTags)
             {

@@ -98,9 +98,5 @@ namespace Quizzler_Backend.Services
         {
             return PasswordGenerator.Generate(length: 16, allowed: Sets.Alphanumerics); // used MlkPwgen
         }
-        public bool IsUsersLesson(string userId, Lesson lesson)
-        {
-            return lesson.OwnerId.ToString() == userId;
-        }
     }
 }
