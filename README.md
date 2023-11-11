@@ -3,7 +3,7 @@
 <img src="media/quizzler.png" alt="Quizzler Logo">
 
 <h2>Overview</h2>
-<p>Quizzler is a dynamic application designed to help students study in a way that suits them best. Experience it now: <a href="https://quizzler-app.vercel.app/">Try Quizzler</a></p>
+<p>Quizzler is a dynamic application designed to help students study in a way that suits them best. Experience it now: <a href="https://quizzler.tech/">Try Quizzler</a></p>
 
 <h3>Advanced Study Methods</h3>
 <ul>
