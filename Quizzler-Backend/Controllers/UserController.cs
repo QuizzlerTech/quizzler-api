@@ -50,18 +50,7 @@ namespace Quizzler_Backend.Controllers
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null) return NotFound("No user found");
-            var result = new User
-            {
-                UserId = user.UserId,
-                Username = user.Username,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                LastSeen = user.LastSeen,
-                DateRegistered = user.DateRegistered,
-                Avatar = user.Avatar,
-            };
-            return Ok(result);
+            return Ok(user);
         }
 
         // GET: api/user/check

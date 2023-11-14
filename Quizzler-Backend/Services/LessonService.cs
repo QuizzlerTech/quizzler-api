@@ -3,6 +3,8 @@ using Quizzler_Backend.Data;
 using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Models;
 using Quizzler_Backend.Services;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace Quizzler_Backend.Controllers.Services
@@ -57,6 +59,12 @@ namespace Quizzler_Backend.Controllers.Services
         }
         public async Task<Tag> AddTag(string tagName)
         {
+            PropertyInfo? propertyInfo = typeof(Tag).GetProperty("Name");
+            var stringLengthAttribute = propertyInfo?.GetCustomAttribute<StringLengthAttribute>();
+            if (stringLengthAttribute != null && tagName.Length > stringLengthAttribute.MaximumLength)
+            {
+                throw new ArgumentException("Tag name is too big");
+            }
             var tag = new Tag { Name = tagName.ToLower() };
             await _context.Tag.AddAsync(tag);
             return tag;

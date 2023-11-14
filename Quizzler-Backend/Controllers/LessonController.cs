@@ -42,9 +42,11 @@ namespace Quizzler_Backend.Controllers
                                             .ThenInclude(f => f.AnswerMedia)
                                        .Include(l => l.Flashcards)
                                             .ThenInclude(f => f.QuestionMedia)
+                                       .Include(l => l.Owner)
                                        .FirstOrDefaultAsync(u => u.LessonId == id);
 
             if (lesson == null) return NotFound();
+
             // Populate LessonSendDto
             var lessonSendDto = new LessonSendDto
             {
@@ -54,6 +56,7 @@ namespace Quizzler_Backend.Controllers
                 ImageName = lesson.LessonMedia?.Name,
                 DateCreated = lesson.DateCreated,
                 IsPublic = lesson.IsPublic,
+                Owner = lesson.Owner,
                 Tags = lesson.LessonTags.Select(l => l.Tag.Name).ToList(),
                 Flashcards = lesson.Flashcards.Select(f => new FlashcardSendDto
                 {
@@ -69,9 +72,46 @@ namespace Quizzler_Backend.Controllers
             return Ok(lessonSendDto);
         }
 
+        // GET: api/lesson/{userID}/{title}
+        // Method to get lesson by userId and lesson title
+        [HttpGet("byUser/{userId}/{title}")]
+        [AllowPublicLessonFilter]
+        public async Task<ActionResult<LessonSendDto>> GetLessonByTitle(int userId, string title)
+        {
+            var user = await _context.User
+                                        .Include(u => u.Lesson)
+                                        .FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user == null) return NotFound();
+            var lesson = user.Lesson
+                .FirstOrDefault(l => l.Title == title);
+            if (lesson == null) return NotFound();
+
+            // Populate LessonSendDto
+            var lessonSendDto = new LessonSendDto
+            {
+                LessonId = lesson.LessonId,
+                Title = lesson.Title,
+                Description = lesson.Description,
+                ImageName = lesson.LessonMedia?.Name,
+                DateCreated = lesson.DateCreated,
+                IsPublic = lesson.IsPublic,
+                Owner = lesson.Owner,
+                Tags = lesson.LessonTags.Select(l => l.Tag.Name).ToList(),
+                Flashcards = lesson.Flashcards.Select(f => new FlashcardSendDto
+                {
+                    FlashcardId = f.FlashcardId,
+                    DateCreated = f.DateCreated,
+                    QuestionText = f.QuestionText,
+                    AnswerText = f.AnswerText,
+                    QuestionImageName = f.QuestionMedia?.Name,
+                    AnswerImageName = f.AnswerMedia?.Name
+                }).ToList()
+            };
+            return Ok(lessonSendDto);
+        }
+
         // POST: api/lesson/add
         // Method to create new lesson
-
         [Authorize]
         [HttpPost("add")]
         public async Task<ActionResult<Lesson>> AddNewLesson([FromForm] LessonAddDto lessonAddDto)
@@ -101,7 +141,15 @@ namespace Quizzler_Backend.Controllers
             {
                 foreach (var tagName in lessonAddDto.TagNames)
                 {
-                    await _lessonService.AddLessonTag(tagName, lesson);
+                    try
+                    {
+                        await _lessonService.AddLessonTag(tagName, lesson);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
+
                 }
             }
 
@@ -126,7 +174,7 @@ namespace Quizzler_Backend.Controllers
             if (user == null) return Unauthorized("Unauthorized");
             if (lesson == null) return BadRequest("Invalid lesson ID");
 
-            if (!(userId == lesson.OwnerId)) return Unauthorized("User is not the owner");
+            if (userId != lesson.OwnerId) return Unauthorized("User is not the owner");
             if (lessonUpdateDto.Title != null)
             {
                 if (_lessonService.TitleExists(lessonUpdateDto.Title, user)) return BadRequest("User already has this lesson");
@@ -191,7 +239,7 @@ namespace Quizzler_Backend.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var lesson = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId.ToString() == lessonId);
             if (lesson == null) return NotFound("No lesson found");
-            if (userId == lesson.OwnerId.ToString()) return Unauthorized("Not user's lesson");
+            if (userId != lesson.OwnerId.ToString()) return Unauthorized("Not user's lesson");
             var lessonTags = lesson.LessonTags.Where(l => l.Tag.LessonTags.Count == 1);
             foreach (var item in lessonTags)
             {

@@ -2,6 +2,6 @@
 {
     public class UserUpdateAvatarDto
     {
-        public int Avatar { get; set; }
+        public int? Avatar { get; set; }
     }
 }
