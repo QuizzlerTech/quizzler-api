@@ -43,9 +43,35 @@ namespace Quizzler_Backend.Controllers
                                        .Include(l => l.Flashcards)
                                             .ThenInclude(f => f.QuestionMedia)
                                        .Include(l => l.Owner)
+                                       .AsSplitQuery()              // to confirm
                                        .FirstOrDefaultAsync(u => u.LessonId == id);
 
             if (lesson == null) return NotFound();
+
+
+            var flashcards = lesson.Flashcards.Select(f => new FlashcardSendDto
+            {
+                FlashcardId = f.FlashcardId,
+                DateCreated = f.DateCreated,
+                QuestionText = f.QuestionText,
+                AnswerText = f.AnswerText,
+                QuestionImageName = f.QuestionMedia?.Name,
+                AnswerImageName = f.AnswerMedia?.Name
+            }).ToList();
+            var loggedUserId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var loggeduser = await _context.User
+                .Include(u => u.FlashcardLog)
+                .FirstOrDefaultAsync(u => u.UserId == loggedUserId);
+
+            if (loggeduser != null)
+            {
+                var flashcardLogs = loggeduser.FlashcardLog.Where(fl => fl.LessonId == lesson.LessonId).ToList();
+                if (flashcardLogs.Count > 0)
+                {
+                    flashcards = _lessonService.GetOrderOfFlashcards(flashcards, flashcardLogs);
+                }
+            }
 
             // Populate LessonSendDto
             var lessonSendDto = new LessonSendDto
@@ -58,17 +84,8 @@ namespace Quizzler_Backend.Controllers
                 IsPublic = lesson.IsPublic,
                 Owner = lesson.Owner,
                 Tags = lesson.LessonTags.Select(l => l.Tag.Name).ToList(),
-                Flashcards = lesson.Flashcards.Select(f => new FlashcardSendDto
-                {
-                    FlashcardId = f.FlashcardId,
-                    DateCreated = f.DateCreated,
-                    QuestionText = f.QuestionText,
-                    AnswerText = f.AnswerText,
-                    QuestionImageName = f.QuestionMedia?.Name,
-                    AnswerImageName = f.AnswerMedia?.Name
-                }).ToList()
+                Flashcards = flashcards,
             };
-
             return Ok(lessonSendDto);
         }
 
@@ -80,11 +97,37 @@ namespace Quizzler_Backend.Controllers
         {
             var user = await _context.User
                                         .Include(u => u.Lesson)
+                                            .ThenInclude(l => l.Flashcards)
+                                        .AsSplitQuery()
                                         .FirstOrDefaultAsync(u => u.UserId == userId);
             if (user == null) return NotFound();
             var lesson = user.Lesson
                 .FirstOrDefault(l => l.Title == title);
             if (lesson == null) return NotFound();
+
+            var flashcards = lesson.Flashcards.Select(f => new FlashcardSendDto
+            {
+                FlashcardId = f.FlashcardId,
+                DateCreated = f.DateCreated,
+                QuestionText = f.QuestionText,
+                AnswerText = f.AnswerText,
+                QuestionImageName = f.QuestionMedia?.Name,
+                AnswerImageName = f.AnswerMedia?.Name
+            }).ToList();
+            var loggedUserId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var loggeduser = await _context.User
+                .Include(u => u.FlashcardLog)
+                .FirstOrDefaultAsync(u => u.UserId == loggedUserId);
+
+            if (loggeduser != null)
+            {
+                var flashcardLogs = loggeduser.FlashcardLog.Where(fl => fl.LessonId == lesson.LessonId).ToList();
+                if (flashcardLogs.Count > 0)
+                {
+                    flashcards = _lessonService.GetOrderOfFlashcards(flashcards, flashcardLogs);
+                }
+            }
 
             // Populate LessonSendDto
             var lessonSendDto = new LessonSendDto
@@ -97,15 +140,7 @@ namespace Quizzler_Backend.Controllers
                 IsPublic = lesson.IsPublic,
                 Owner = lesson.Owner,
                 Tags = lesson.LessonTags.Select(l => l.Tag.Name).ToList(),
-                Flashcards = lesson.Flashcards.Select(f => new FlashcardSendDto
-                {
-                    FlashcardId = f.FlashcardId,
-                    DateCreated = f.DateCreated,
-                    QuestionText = f.QuestionText,
-                    AnswerText = f.AnswerText,
-                    QuestionImageName = f.QuestionMedia?.Name,
-                    AnswerImageName = f.AnswerMedia?.Name
-                }).ToList()
+                Flashcards = flashcards,
             };
             return Ok(lessonSendDto);
         }

@@ -57,6 +57,21 @@ namespace Quizzler_Backend.Controllers.Services
         {
             return MakeAlphaNumerical(title) + _globalService.CreateSalt() + ".jpeg";
         }
+        public List<FlashcardSendDto> GetOrderOfFlashcards(List<FlashcardSendDto> flashcards, List<FlashcardLog> flashcardLogs)
+        {
+            Dictionary<int, int> flashcardRating = new();
+            flashcards.ForEach(flashcard =>
+            {
+                flashcardRating[flashcard.FlashcardId] = 0;
+            });
+            flashcardLogs.ForEach(flashcardLog =>
+            {
+                flashcardRating[flashcardLog.FlashcardId] += flashcardLog.WasCorrect ? -2 : 1;
+            });
+            flashcards.Sort((flashcard1, flashcard2) =>
+                flashcardRating[flashcard2.FlashcardId].CompareTo(flashcardRating[flashcard1.FlashcardId]));
+            return flashcards;
+        }
         public async Task<Tag> AddTag(string tagName)
         {
             PropertyInfo? propertyInfo = typeof(Tag).GetProperty("Name");

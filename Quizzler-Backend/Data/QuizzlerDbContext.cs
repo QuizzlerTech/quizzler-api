@@ -191,6 +191,10 @@ namespace Quizzler_Backend.Data
                       .WithMany(f => f.FlashcardLog)
                       .HasForeignKey(f => f.FlashcardId)
                       .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(l => l.Lesson)
+                      .WithMany()
+                      .HasForeignKey(f => f.LessonId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
 

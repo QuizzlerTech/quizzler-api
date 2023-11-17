@@ -163,9 +163,8 @@ namespace Quizzler_Backend.Controllers
             var flashcard = await _context.Flashcard.FirstOrDefaultAsync(f => f.FlashcardId == flashcardLogDto.FlashcardId);
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
-
             if (flashcard == null) return BadRequest("Flashcard not found");
-            var newLog = new FlashcardLog { Date = DateTime.UtcNow, Flashcard = flashcard, WasCorrect = flashcardLogDto.WasCorrect, User = user };
+            var newLog = new FlashcardLog { Date = DateTime.UtcNow, Flashcard = flashcard, WasCorrect = flashcardLogDto.WasCorrect, User = user, LessonId = flashcard.LessonId };
 
             _context.FlashcardLog.Add(newLog);
             await _context.SaveChangesAsync();
