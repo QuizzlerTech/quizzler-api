@@ -1,8 +1,8 @@
-﻿namespace Quizzler_Backend.Dtos
+﻿namespace Quizzler_Backend.Dtos.Flashcard
 {
-    public class FlashcardUpdateDto
+    public class FlashcardAddDto
     {
-        public int FlashcardId { get; set; }
+        public int LessonId { get; set; }
         public string? QuestionText { get; set; }
         public string? AnswerText { get; set; }
         public IFormFile? QuestionImage { get; set; }

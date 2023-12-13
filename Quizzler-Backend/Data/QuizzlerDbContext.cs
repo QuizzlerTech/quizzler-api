@@ -196,6 +196,8 @@ namespace Quizzler_Backend.Data
                       .HasForeignKey(f => f.LessonId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+            // Favorite Configuration
+            modelBuilder.Entity<Favorite>().HasKey(f => new { f.LessonId, f.UserId });
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using CsvHelper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Controllers.Services;
@@ -89,6 +90,7 @@ namespace Quizzler_Backend.Controllers
             return Ok(lessonSendDto);
         }
 
+
         // GET: api/lesson/{userID}/{title}
         // Method to get lesson by userId and lesson title
         [HttpGet("byUser/{userId}/{title}")]
@@ -98,6 +100,12 @@ namespace Quizzler_Backend.Controllers
             var user = await _context.User
                                         .Include(u => u.Lesson)
                                             .ThenInclude(l => l.Flashcards)
+                                            .ThenInclude(f => f.QuestionMedia)
+                                        .Include(u => u.Lesson)
+                                            .ThenInclude(l => l.Flashcards)
+                                            .ThenInclude(f => f.AnswerMedia)
+                                        .Include(u => u.Lesson)
+                                            .ThenInclude(l => l.LessonMedia)
                                         .AsSplitQuery()
                                         .FirstOrDefaultAsync(u => u.UserId == userId);
             if (user == null) return NotFound();
@@ -143,6 +151,35 @@ namespace Quizzler_Backend.Controllers
                 Flashcards = flashcards,
             };
             return Ok(lessonSendDto);
+        }
+        // GET: api/lesson/topLessons
+        // Method to get Most popular lessons
+        [HttpGet("topLessons")]
+        public async Task<ActionResult<List<LessonInfoSendCardDto>>> GetTopLessons(int top = 5)
+        {
+            try
+            {
+                var lessons = await _context.Lesson
+                    .Where(l => l.IsPublic)
+                    .OrderByDescending(l => l.Flashcards.Sum(f => f.FlashcardLog!.Count))
+                    .Take(top)
+                    .Select(l => new LessonInfoSendCardDto
+                    {
+                        LessonId = l.LessonId,
+                        Title = l.Title,
+                        Description = l.Description,
+                        FlashcardCount = l.Flashcards.Count,
+                        ImageName = l.LessonMedia!.Name
+                    })
+                    .ToListAsync();
+
+                return Ok(lessons);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while getting top lessons");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request.");
+            }
         }
 
         // POST: api/lesson/add
@@ -193,7 +230,36 @@ namespace Quizzler_Backend.Controllers
 
             return new CreatedAtActionResult(nameof(GetLessonById), "Lesson", new { id = lesson.LessonId }, $"Created lesson {lesson.LessonId}");
         }
+        // POST: api/lesson/importCsv
+        // Method to create new lesson
+        /*        [Authorize]
+                [HttpPost("importCsv")]
+                public async Task<ActionResult<Lesson>> ImportFlashcardsFromCsv(IFormFile Csv, int LessonId)
+                {
+                    var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                    var user = await _context.User
+                        .Include(u => u.Lesson)
+                        .FirstOrDefaultAsync(u => u.UserId == userId);
+                    if (user == null) return Unauthorized("No user found");
 
+                    var lesson = user.Lesson.FirstOrDefault(l => l.LessonId == LessonId);
+                    if (lesson == null) return NotFound();
+
+                    using (var reader = new StreamReader(Csv.OpenReadStream()))
+                    {
+                        var fileContent = reader.ReadToEndAsync().Result.Split('\n');
+                        foreach (var line in fileContent)
+                        {
+                            if (!line.Contains(';')) continue;
+                            var flashcard = new Flashcard { AnswerText = line.Split(';')[0], QuestionText = line.Split(';')[1] };
+                            lesson.Flashcards.Add(flashcard);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    return Ok(lesson);
+                }*/
 
         // POST: api/lesson/update
         // Method to update a lesson

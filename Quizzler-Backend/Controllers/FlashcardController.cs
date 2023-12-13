@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Data;
-using Quizzler_Backend.Dtos;
+using Quizzler_Backend.Dtos.Flashcard;
 using Quizzler_Backend.Models;
 using Quizzler_Backend.Services;
 using System.Security.Claims;

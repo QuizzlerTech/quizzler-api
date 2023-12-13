@@ -22,6 +22,7 @@ namespace Quizzler_Backend
             builder.Services.AddScoped<GlobalService>();
             builder.Services.AddScoped<FlashcardService>();
             builder.Services.AddControllers();
+            builder.Services.AddMemoryCache();
             builder.Services.Configure<KestrelServerOptions>(options =>
             {
                 options.AllowSynchronousIO = true;

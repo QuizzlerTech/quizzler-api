@@ -1,4 +1,4 @@
-﻿namespace Quizzler_Backend.Dtos
+﻿namespace Quizzler_Backend.Dtos.Flashcard
 {
     public class FlashcardSendDto
     {

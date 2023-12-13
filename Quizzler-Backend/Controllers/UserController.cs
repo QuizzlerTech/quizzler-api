@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Controllers.Services;
 using Quizzler_Backend.Data;
 using Quizzler_Backend.Dtos;
+using Quizzler_Backend.Dtos.Flashcard;
 using Quizzler_Backend.Models;
 using Quizzler_Backend.Services;
 using System.Security.Claims;
@@ -32,24 +33,20 @@ namespace Quizzler_Backend.Controllers
         [HttpGet("profile")]
         public async Task<ActionResult<User>> GetMyProfile()
         {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                return await GetUserProfileById(Convert.ToInt32(userId));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return BadRequest("Not logged");
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+            if (user == null) return NotFound();
+            return Ok(user);
         }
 
-        // GET: api/user/{id}/profile
+        // GET: api/user/{username}/profile
         // Method to get profile info 
-        [HttpGet("{id}/profile")]
-        public async Task<ActionResult<User>> GetUserProfileById(int id)
+        [HttpGet("{username}/profile")]
+        public async Task<ActionResult<User>> GetUserProfileByUsername(string username)
         {
-            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == id);
-            if (user == null) return NotFound("No user found");
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Username == username);
+            if (user == null) return NotFound();
             return Ok(user);
         }
 
@@ -98,8 +95,6 @@ namespace Quizzler_Backend.Controllers
                 .FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null) return NotFound("No user found");
 
-
-
             bool isItLoggedUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value == id.ToString();
             var result = user.Lesson
                              .Where(l => l.IsPublic || isItLoggedUser)
@@ -113,6 +108,16 @@ namespace Quizzler_Backend.Controllers
                                  IsPublic = l.IsPublic,
                                  Tags = _context.Entry(l).Collection(l => l.LessonTags).Query().Select(t => t.Tag).Select(t => t.Name).ToList(),
                                  FlashcardCount = _context.Entry(l).Collection(l => l.Flashcards).Query().Count(),
+                                 Owner = new UserSendDto
+                                 {
+                                     UserId = user.UserId,
+                                     Username = user.Username,
+                                     Avatar = user.Avatar,
+                                     FirstName = user.FirstName,
+                                     LastName = user.LastName,
+                                     LastSeen = user.LastSeen,
+                                     LessonCount = user.Lesson.Count
+                                 }
                              })
                              .ToList();
 
@@ -157,7 +162,30 @@ namespace Quizzler_Backend.Controllers
             return flashcardLogs;
         }
 
-
+        [Authorize]
+        [HttpGet("getLastLessonInfo")]
+        public async Task<ActionResult<LessonInfoSendCardDto>> GetLastLessonInfo()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _context.User
+                .Include(u => u.FlashcardLog)
+                .ThenInclude(l => l.Flashcard)
+                        .ThenInclude(f => f.Lesson)
+                            .ThenInclude(l => l.LessonMedia)
+                .FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+            if (user == null) return NotFound("User not found");
+            var lastLesson = user.FlashcardLog.LastOrDefault()!.Flashcard.Lesson;
+            if (lastLesson == null) return NotFound("No lessons found");
+            var result = new LessonInfoSendCardDto
+            {
+                LessonId = lastLesson.LessonId,
+                Title = lastLesson.Title,
+                Description = lastLesson.Description ?? "",
+                ImageName = lastLesson.LessonMedia?.Name ?? "",
+                FlashcardCount = lastLesson.Flashcards.Count,
+            };
+            return Ok(result);
+        }
 
         // POST: api/user/register
         // Method to register a new user
@@ -177,7 +205,7 @@ namespace Quizzler_Backend.Controllers
 
             await _context.SaveChangesAsync();
 
-            return new CreatedAtActionResult(nameof(GetUserProfileById), "User", new { id = user.UserId }, "Created user");
+            return new CreatedAtActionResult(nameof(GetUserProfileByUsername), "User", new { username = user.Username }, "Created user");
         }
 
         // POST: api/user/login
@@ -264,6 +292,6 @@ namespace Quizzler_Backend.Controllers
             await _context.SaveChangesAsync();
             return Ok("User deleted successfully.");
         }
-    }
 
+    }
 }

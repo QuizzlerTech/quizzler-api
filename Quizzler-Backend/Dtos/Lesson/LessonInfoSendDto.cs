@@ -1,4 +1,6 @@
-﻿namespace Quizzler_Backend.Dtos
+﻿using Quizzler_Backend.Dtos.User;
+
+namespace Quizzler_Backend.Dtos.Lesson
 {
     // Data Transfer Object
     public class LessonInfoSendDto
@@ -11,5 +13,6 @@
         public List<string>? Tags { get; set; }
         public bool IsPublic { get; set; }
         public int FlashcardCount { get; set; }
+        public UserSendDto Owner { get; set; } = null!;
     }
 }

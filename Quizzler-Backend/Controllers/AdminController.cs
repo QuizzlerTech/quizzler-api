@@ -11,7 +11,6 @@ namespace Quizzler_Backend.Controllers
     public class AdminController : ControllerBase
     {
         private readonly QuizzlerDbContext _context;
-
         public AdminController(QuizzlerDbContext context)
         {
             _context = context;

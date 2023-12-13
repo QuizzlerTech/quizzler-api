@@ -25,7 +25,6 @@ namespace Quizzler_Backend.Models
 
         public DateTime DateRegistered { get; set; }
         public DateTime LastSeen { get; set; }
-
         public int? Avatar { get; set; }
         [JsonIgnore]
         public virtual ICollection<Lesson> Lesson { get; set; } = new List<Lesson>();
@@ -35,6 +34,8 @@ namespace Quizzler_Backend.Models
         public virtual LoginInfo LoginInfo { get; set; } = null!;
         [JsonIgnore]
         public virtual ICollection<FlashcardLog> FlashcardLog { get; set; } = new List<FlashcardLog>();
+        [JsonIgnore]
+        public virtual ICollection<Like> Likes { get; set; } = new List<Like>();
 
     }
 }

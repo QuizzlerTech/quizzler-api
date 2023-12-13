@@ -1,4 +1,4 @@
-﻿using Quizzler_Backend.Dtos;
+﻿using Quizzler_Backend.Dtos.Flashcard;
 using Quizzler_Backend.Models;
 
 namespace Quizzler_Backend.Services

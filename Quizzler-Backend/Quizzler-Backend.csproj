@@ -8,9 +8,12 @@
     <UserSecretsId>a0609fdc-b3ec-4339-a12b-4f2c66647a72</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="30.0.1" />
+    <PackageReference Include="FuzzySharp" Version="2.0.2" />
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="1.1.12" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.9" />
