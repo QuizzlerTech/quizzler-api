@@ -1,7 +1,4 @@
-﻿using Quizzler_Backend.Dtos.Lesson;
-using Quizzler_Backend.Dtos.User;
-
-namespace Quizzler_Backend.Dtos.Search
+﻿namespace Quizzler_Backend.Dtos.Search
 {
     public class CombinedSearchSendDto
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Quizzler_Backend.Data;
-using Quizzler_Backend.Dtos.User;
+using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Models;
 using Quizzler_Backend.Services;
 using System.IdentityModel.Tokens.Jwt;
@@ -101,6 +101,7 @@ namespace Quizzler_Backend.Controllers.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
 
         public static implicit operator UserService(GlobalService v)
         {
