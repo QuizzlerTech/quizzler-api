@@ -188,6 +188,51 @@ namespace Quizzler_Backend.Controllers
             return Ok(result);
         }
 
+        [Authorize]
+        [HttpGet("getLikedLessons")]
+        public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetLikedLessons()
+        {
+            var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null) return NotFound("No user found");
+
+            var lessons = await _context.Lesson
+                                        .AsNoTracking()
+                                        .Include(l => l.LessonMedia)
+                                        .Include(l => l.LessonTags).ThenInclude(t => t.Tag)
+                                        .Include(l => l.Flashcards)
+                                        .Where(l => l.Likes.Any(like => like.UserId == userId) && (l.IsPublic || l.OwnerId == userId))
+                                        .ToListAsync();
+
+            var ownerDto = new UserSendDto
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Avatar = user.Avatar,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                LastSeen = user.LastSeen,
+                LessonCount = user.Lesson.Count
+            };
+
+            var result = lessons.Select(l => new LessonInfoSendDto
+            {
+                LessonId = l.LessonId,
+                Title = l.Title,
+                Description = l.Description,
+                ImageName = l.LessonMedia?.Name,
+                DateCreated = l.DateCreated,
+                IsPublic = l.IsPublic,
+                Tags = l.LessonTags.Select(t => t.Tag.Name).ToList(),
+                FlashcardCount = l.Flashcards.Count,
+                Owner = ownerDto
+            })
+            .ToList();
+
+            return Ok(result);
+        }
+
         // POST: api/user/register
         // Method to register a new user
         [HttpPost("register")]
@@ -277,6 +322,7 @@ namespace Quizzler_Backend.Controllers
             await _context.SaveChangesAsync();
             return Ok("Avatar updated");
         }
+
 
         // DELETE: api/user/delete
         // Method to delete a user

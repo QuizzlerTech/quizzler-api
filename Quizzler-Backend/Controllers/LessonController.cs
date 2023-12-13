@@ -91,7 +91,6 @@ namespace Quizzler_Backend.Controllers
             return Ok(lessonSendDto);
         }
 
-
         // GET: api/lesson/{userID}/{title}
         // Method to get lesson by userId and lesson title
         [HttpGet("byUser/{userId}/{title}")]
@@ -330,6 +329,32 @@ namespace Quizzler_Backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok("Lesson updated");
+        }
+
+        // POST: api/lesson/toggleLike
+        // Method to like a lesson
+        [Authorize]
+        [HttpPost("toggleLike")]
+        public async Task<ActionResult<Lesson>> LikeLesson(int LessonId)
+        {
+            var lesson = await _context.Lesson.FirstOrDefaultAsync(l => l.LessonId == LessonId);
+            if (lesson == null) return BadRequest("Lesson not found");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+            if (user == null) return Unauthorized("Unauthorized");
+
+            var like = await _context.Like.FirstOrDefaultAsync(l => l.LessonId == LessonId && l.UserId == user.UserId);
+            if (like != null)
+            {
+                _context.Remove(like);
+            }
+            else
+            {
+                _context.Like.Add(new Like { LessonId = LessonId, UserId = user.UserId });
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok("Toggled");
         }
 
         // DELETE: api/lesson/delete

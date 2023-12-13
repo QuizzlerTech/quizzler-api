@@ -218,5 +218,6 @@ namespace Quizzler_Backend.Data
         public DbSet<Tag> Tag { get; set; }
         public DbSet<LessonTag> LessonTag { get; set; }
         public DbSet<FlashcardLog> FlashcardLog { get; set; }
+        public DbSet<Like> Like { get; set; }
     }
 }
