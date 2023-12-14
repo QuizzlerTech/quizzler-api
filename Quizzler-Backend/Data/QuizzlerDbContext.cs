@@ -195,6 +195,10 @@ namespace Quizzler_Backend.Data
                       .WithMany()
                       .HasForeignKey(f => f.LessonId)
                       .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(u => u.User)
+                        .WithMany(f => f.FlashcardLog)
+                        .HasForeignKey(f => f.UserId)
+                        .OnDelete(DeleteBehavior.Cascade);
             });
             // Like Configuration
             modelBuilder.Entity<Like>().HasKey(f => new { f.LessonId, f.UserId });
