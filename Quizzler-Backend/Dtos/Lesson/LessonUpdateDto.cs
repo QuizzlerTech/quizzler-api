@@ -1,7 +1,4 @@
-﻿using Quizzler_Backend.Models;
-using System.ComponentModel.DataAnnotations;
-
-namespace Quizzler_Backend.Dtos
+﻿namespace Quizzler_Backend.Dtos
 {
     // Data Transfer Object
     public class LessonUpdateDto

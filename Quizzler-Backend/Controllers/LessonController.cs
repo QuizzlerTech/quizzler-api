@@ -45,6 +45,7 @@ namespace Quizzler_Backend.Controllers
                                        .Include(l => l.Flashcards)
                                             .ThenInclude(f => f.QuestionMedia)
                                        .Include(l => l.Owner)
+                                       .Include(l => l.Likes)
                                        .AsSplitQuery()              // to confirm
                                        .FirstOrDefaultAsync(u => u.LessonId == id);
 
@@ -74,7 +75,16 @@ namespace Quizzler_Backend.Controllers
                     flashcards = _lessonService.GetOrderOfFlashcards(flashcards, flashcardLogs);
                 }
             }
-
+            var userSendDto = new UserSendDto
+            {
+                UserId = lesson.Owner.UserId,
+                Username = lesson.Owner.Username,
+                FirstName = lesson.Owner.FirstName,
+                LastName = lesson.Owner.LastName,
+                LastSeen = lesson.Owner.LastSeen,
+                Avatar = lesson.Owner.Avatar,
+                LessonCount = lesson.Owner.Lesson.Count
+            };
             // Populate LessonSendDto
             var lessonSendDto = new LessonSendDto
             {
@@ -84,13 +94,14 @@ namespace Quizzler_Backend.Controllers
                 ImageName = lesson.LessonMedia?.Name,
                 DateCreated = lesson.DateCreated,
                 IsPublic = lesson.IsPublic,
-                Owner = lesson.Owner,
+                Owner = userSendDto,
                 Tags = lesson.LessonTags.Select(l => l.Tag.Name).ToList(),
                 Flashcards = flashcards,
+                LikesCount = lesson.Likes.Count,
+                IsLiked = lesson.Likes.Any(l => l.UserId == loggedUserId)
             };
             return Ok(lessonSendDto);
         }
-
         // GET: api/lesson/{userID}/{title}
         // Method to get lesson by userId and lesson title
         [HttpGet("byUser/{userId}/{title}")]
@@ -106,6 +117,8 @@ namespace Quizzler_Backend.Controllers
                                             .ThenInclude(f => f.AnswerMedia)
                                         .Include(u => u.Lesson)
                                             .ThenInclude(l => l.LessonMedia)
+                                        .Include(u => u.Lesson)
+                                            .ThenInclude(l => l.Likes)
                                         .AsSplitQuery()
                                         .FirstOrDefaultAsync(u => u.UserId == userId);
             if (user == null) return NotFound();
@@ -136,7 +149,16 @@ namespace Quizzler_Backend.Controllers
                     flashcards = _lessonService.GetOrderOfFlashcards(flashcards, flashcardLogs);
                 }
             }
-
+            var userSendDto = new UserSendDto
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                LastSeen = user.LastSeen,
+                Avatar = user.Avatar,
+                LessonCount = user.Lesson.Count
+            };
             // Populate LessonSendDto
             var lessonSendDto = new LessonSendDto
             {
@@ -146,9 +168,11 @@ namespace Quizzler_Backend.Controllers
                 ImageName = lesson.LessonMedia?.Name,
                 DateCreated = lesson.DateCreated,
                 IsPublic = lesson.IsPublic,
-                Owner = lesson.Owner,
+                Owner = userSendDto,
                 Tags = lesson.LessonTags.Select(l => l.Tag.Name).ToList(),
                 Flashcards = flashcards,
+                LikesCount = lesson.Likes.Count,
+                IsLiked = lesson.Likes.Any(l => l.UserId == loggedUserId)
             };
             return Ok(lessonSendDto);
         }
@@ -230,6 +254,33 @@ namespace Quizzler_Backend.Controllers
 
             return new CreatedAtActionResult(nameof(GetLessonById), "Lesson", new { id = lesson.LessonId }, $"Created lesson {lesson.LessonId}");
         }
+
+        // POST: api/lesson/like
+        // Method to like a lesson
+        [Authorize]
+        [HttpPost("like")]
+        public async Task<ActionResult<Lesson>> LikeLesson(int LessonId, bool Like)
+        {
+            var lesson = await _context.Lesson.FirstOrDefaultAsync(l => l.LessonId == LessonId);
+            if (lesson == null) return BadRequest("Lesson not found");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+            if (user == null) return Unauthorized("Unauthorized");
+
+            var like = await _context.Like.FirstOrDefaultAsync(l => l.LessonId == LessonId && l.UserId == user.UserId);
+            if (like != null && !Like)
+            {
+                _context.Remove(like);
+            }
+            else if (like == null && Like)
+            {
+                _context.Like.Add(new Like { LessonId = LessonId, UserId = user.UserId });
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok("Liked set");
+        }
+
         // POST: api/lesson/importCsv
         // Method to create new lesson
         /*        [Authorize]
@@ -331,31 +382,6 @@ namespace Quizzler_Backend.Controllers
             return Ok("Lesson updated");
         }
 
-        // POST: api/lesson/toggleLike
-        // Method to like a lesson
-        [Authorize]
-        [HttpPost("toggleLike")]
-        public async Task<ActionResult<Lesson>> LikeLesson(int LessonId)
-        {
-            var lesson = await _context.Lesson.FirstOrDefaultAsync(l => l.LessonId == LessonId);
-            if (lesson == null) return BadRequest("Lesson not found");
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
-            if (user == null) return Unauthorized("Unauthorized");
-
-            var like = await _context.Like.FirstOrDefaultAsync(l => l.LessonId == LessonId && l.UserId == user.UserId);
-            if (like != null)
-            {
-                _context.Remove(like);
-            }
-            else
-            {
-                _context.Like.Add(new Like { LessonId = LessonId, UserId = user.UserId });
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok("Toggled");
-        }
 
         // DELETE: api/lesson/delete
         // Method to delete a lesson

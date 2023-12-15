@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Quizzler_Backend.Data;
 using Quizzler_Backend.Dtos;
+using Quizzler_Backend.Dtos.Lesson;
 using Quizzler_Backend.Dtos.Search;
 using System.Security.Claims;
 
@@ -70,7 +71,7 @@ namespace Quizzler_Backend.Controllers
 
             var lessonResults = preliminaryLessonResults
                 .Where(l => FuzzyMatch(queryLower, l.LessonTags.Select(lt => lt.Tag.Name).Append(l.Title).ToList()).Score > threshold)
-                .Select(l => new LessonSearchSendDto
+                .Select(l => new LessonInfoSendDto
                 {
                     LessonId = l.LessonId,
                     Title = l.Title,
@@ -88,7 +89,6 @@ namespace Quizzler_Backend.Controllers
                         LessonCount = l.Owner.Lesson.Count
                     },
                     Tags = l.LessonTags.Where(t => t.Tag != null).Select(t => t.Tag.Name).ToList()
-
                 })
                 .Take(5)
                 .ToList();
@@ -155,6 +155,7 @@ namespace Quizzler_Backend.Controllers
                 })
                 .Where(x => x.MatchResult.Score > threshold)
                 .Select(x => x.MatchResult.Target)
+                .Distinct()
                 .Take(5)
                 .ToList();
 
@@ -166,6 +167,7 @@ namespace Quizzler_Backend.Controllers
                 })
                 .Where(x => x.MatchResult.Score > threshold)
                 .Select(x => x.MatchResult.Target)
+                .Distinct()
                 .Take(5)
                 .ToList();
 

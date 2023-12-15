@@ -1,8 +1,10 @@
-﻿namespace Quizzler_Backend.Dtos.Search
+﻿using Quizzler_Backend.Dtos.Lesson;
+
+namespace Quizzler_Backend.Dtos.Search
 {
     public class CombinedSearchSendDto
     {
         public List<UserSendDto> Users { get; set; } = new List<UserSendDto>();
-        public List<LessonSearchSendDto> Lessons { get; set; } = new List<LessonSearchSendDto>();
+        public List<LessonInfoSendDto> Lessons { get; set; } = new List<LessonInfoSendDto>();
     }
 }

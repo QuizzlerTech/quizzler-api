@@ -41,7 +41,6 @@ namespace Quizzler_Backend.Controllers.Services
             return false;
         }
 
-
         public bool IsEmailCorrect(string email)
         {
             try
@@ -102,10 +101,5 @@ namespace Quizzler_Backend.Controllers.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-
-        public static implicit operator UserService(GlobalService v)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -93,6 +93,8 @@ namespace Quizzler_Backend.Controllers
                     .ThenInclude(l => l.LessonMedia)
                 .Include(u => u.Lesson)
                     .ThenInclude(l => l.Flashcards)
+                .Include(u => u.Lesson)
+                    .ThenInclude(l => l.Likes)
                 .FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null) return NotFound("No user found");
 
@@ -109,6 +111,8 @@ namespace Quizzler_Backend.Controllers
                                  IsPublic = l.IsPublic,
                                  Tags = _context.Entry(l).Collection(l => l.LessonTags).Query().Select(t => t.Tag).Select(t => t.Name).ToList(),
                                  FlashcardCount = _context.Entry(l).Collection(l => l.Flashcards).Query().Count(),
+                                 LikesCount = l.Likes.Count,
+                                 IsLiked = l.Likes.Any(like => like.UserId == id),
                                  Owner = new UserSendDto
                                  {
                                      UserId = user.UserId,
@@ -118,7 +122,7 @@ namespace Quizzler_Backend.Controllers
                                      LastName = user.LastName,
                                      LastSeen = user.LastSeen,
                                      LessonCount = user.Lesson.Count
-                                 }
+                                 },
                              })
                              .ToList();
 
@@ -203,6 +207,7 @@ namespace Quizzler_Backend.Controllers
                                         .Include(l => l.LessonTags).ThenInclude(t => t.Tag)
                                         .Include(l => l.Flashcards)
                                         .Where(l => l.Likes.Any(like => like.UserId == userId) && (l.IsPublic || l.OwnerId == userId))
+                                        .Include(l => l.Likes)
                                         .ToListAsync();
 
             var ownerDto = new UserSendDto
@@ -226,6 +231,8 @@ namespace Quizzler_Backend.Controllers
                 IsPublic = l.IsPublic,
                 Tags = l.LessonTags.Select(t => t.Tag.Name).ToList(),
                 FlashcardCount = l.Flashcards.Count,
+                LikesCount = l.Likes.Count,
+                IsLiked = l.Likes.Any(like => like.UserId == userId),
                 Owner = ownerDto
             })
             .ToList();

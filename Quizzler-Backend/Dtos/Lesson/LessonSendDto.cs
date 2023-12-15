@@ -1,5 +1,4 @@
 ﻿using Quizzler_Backend.Dtos.Flashcard;
-using Quizzler_Backend.Models;
 
 namespace Quizzler_Backend.Dtos
 {
@@ -12,7 +11,9 @@ namespace Quizzler_Backend.Dtos
         public string? ImageName { get; set; }
         public DateTime DateCreated { get; set; }
         public bool IsPublic { get; set; }
-        public User Owner { get; set; } = null!;
+        public UserSendDto Owner { get; set; } = null!;
+        public int LikesCount { get; set; }
+        public bool IsLiked { get; set; }
         public List<string>? Tags { get; set; }
         public ICollection<FlashcardSendDto> Flashcards { get; set; } = null!;
     }
