@@ -51,7 +51,8 @@ namespace Quizzler_Backend.Controllers
                 .Include(l => l.Owner)
                 .Include(l => l.Flashcards)
                 .Include(l => l.LessonTags)
-                .ThenInclude(lt => lt.Tag)
+                    .ThenInclude(lt => lt.Tag)
+                .Include(l => l.Likes)
                 .ToListAsync();
 
             var userResults = preliminaryUserResults
@@ -88,7 +89,9 @@ namespace Quizzler_Backend.Controllers
                         Avatar = l.Owner.Avatar,
                         LessonCount = l.Owner.Lesson.Count
                     },
-                    Tags = l.LessonTags.Where(t => t.Tag != null).Select(t => t.Tag.Name).ToList()
+                    Tags = l.LessonTags.Where(t => t.Tag != null).Select(t => t.Tag.Name).ToList(),
+                    LikesCount = l.Likes.Count,
+                    IsLiked = l.Likes.Any(l => l.UserId == userId),
                 })
                 .Take(5)
                 .ToList();
