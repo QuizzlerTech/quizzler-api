@@ -92,6 +92,7 @@ namespace Quizzler_Backend.Controllers
                     Tags = l.LessonTags.Where(t => t.Tag != null).Select(t => t.Tag.Name).ToList(),
                     LikesCount = l.Likes.Count,
                     IsLiked = l.Likes.Any(l => l.UserId == userId),
+                    DateCreated = l.DateCreated,
                 })
                 .Take(5)
                 .ToList();

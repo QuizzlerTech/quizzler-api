@@ -108,6 +108,7 @@ namespace Quizzler_Backend.Controllers
         [AllowPublicLessonFilter]
         public async Task<ActionResult<LessonSendDto>> GetLessonByTitle(int userId, string title)
         {
+            Console.WriteLine("GetLessonByTitle");
             var user = await _context.User
                                         .Include(u => u.Lesson)
                                             .ThenInclude(l => l.Flashcards)
@@ -183,6 +184,7 @@ namespace Quizzler_Backend.Controllers
         {
             try
             {
+                var loggedUserId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 var lessons = await _context.Lesson
                     .Where(l => l.IsPublic)
                     .OrderByDescending(l => l.Flashcards.Sum(f => f.FlashcardLog!.Count))
@@ -193,7 +195,19 @@ namespace Quizzler_Backend.Controllers
                         Title = l.Title,
                         Description = l.Description,
                         FlashcardCount = l.Flashcards.Count,
-                        ImageName = l.LessonMedia!.Name
+                        ImageName = l.LessonMedia!.Name,
+                        Owner = new UserSendDto
+                        {
+                            UserId = l.Owner.UserId,
+                            Username = l.Owner.Username,
+                            FirstName = l.Owner.FirstName,
+                            LastName = l.Owner.LastName,
+                            LastSeen = l.Owner.LastSeen,
+                            Avatar = l.Owner.Avatar,
+                            LessonCount = l.Owner.Lesson.Count
+                        },
+                        LikesCount = l.Likes.Count,
+                        IsLiked = l.Likes.Any(l => l.UserId == loggedUserId)
                     })
                     .ToListAsync();
 

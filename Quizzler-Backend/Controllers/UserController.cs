@@ -168,19 +168,45 @@ namespace Quizzler_Backend.Controllers
         }
 
         [Authorize]
-        [HttpGet("getLastLessonInfo")]
-        public async Task<ActionResult<LessonInfoSendCardDto>> GetLastLessonInfo()
+        [HttpGet("lastLesson")]
+        public async Task<ActionResult<LessonInfoSendCardDto>> GetLastLesson()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _context.User
-                .Include(u => u.FlashcardLog)
-                .ThenInclude(l => l.Flashcard)
-                        .ThenInclude(f => f.Lesson)
-                            .ThenInclude(l => l.LessonMedia)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
             if (user == null) return NotFound("User not found");
-            var lastLesson = user.FlashcardLog.LastOrDefault()!.Flashcard.Lesson;
+
+            var lastLesson = await _context.FlashcardLog
+                .AsNoTracking()
+                .Where(l => l.UserId == user.UserId)
+                .Include(l => l.Flashcard)
+                    .ThenInclude(f => f.Lesson)
+                        .ThenInclude(l => l.LessonMedia)
+                .Include(l => l.Flashcard)
+                    .ThenInclude(f => f.Lesson)
+                .Include(l => l.Flashcard)
+                    .ThenInclude(f => f.Lesson)
+                        .ThenInclude(l => l.Likes)
+                 .Include(l => l.Flashcard)
+                    .ThenInclude(f => f.Lesson).ThenInclude(l => l.Owner)
+                .OrderByDescending(fl => fl.Date)
+                    .Select(l => l.Flashcard.Lesson)
+                .FirstOrDefaultAsync();
+
             if (lastLesson == null) return NotFound("No lessons found");
+
+            var ownerDto = new UserSendDto
+            {
+                UserId = lastLesson.Owner.UserId,
+                Username = lastLesson.Owner.Username,
+                Avatar = lastLesson.Owner.Avatar,
+                FirstName = lastLesson.Owner.FirstName,
+                LastName = lastLesson.Owner.LastName,
+                LastSeen = lastLesson.Owner.LastSeen,
+                LessonCount = lastLesson.Owner.Lesson.Count
+            };
+
             var result = new LessonInfoSendCardDto
             {
                 LessonId = lastLesson.LessonId,
@@ -188,12 +214,15 @@ namespace Quizzler_Backend.Controllers
                 Description = lastLesson.Description ?? "",
                 ImageName = lastLesson.LessonMedia?.Name ?? "",
                 FlashcardCount = lastLesson.Flashcards.Count,
+                Owner = ownerDto,
+                LikesCount = lastLesson.Likes.Count,
+                IsLiked = lastLesson.Likes.Any(like => like.UserId == user.UserId)
             };
             return Ok(result);
         }
 
         [Authorize]
-        [HttpGet("getLikedLessons")]
+        [HttpGet("likedLessons")]
         public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetLikedLessons()
         {
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
@@ -208,18 +237,9 @@ namespace Quizzler_Backend.Controllers
                                         .Include(l => l.Flashcards)
                                         .Where(l => l.Likes.Any(like => like.UserId == userId) && (l.IsPublic || l.OwnerId == userId))
                                         .Include(l => l.Likes)
+                                        .Include(l => l.Owner)
                                         .ToListAsync();
 
-            var ownerDto = new UserSendDto
-            {
-                UserId = user.UserId,
-                Username = user.Username,
-                Avatar = user.Avatar,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                LastSeen = user.LastSeen,
-                LessonCount = user.Lesson.Count
-            };
 
             var result = lessons.Select(l => new LessonInfoSendDto
             {
@@ -233,11 +253,38 @@ namespace Quizzler_Backend.Controllers
                 FlashcardCount = l.Flashcards.Count,
                 LikesCount = l.Likes.Count,
                 IsLiked = l.Likes.Any(like => like.UserId == userId),
-                Owner = ownerDto
+                Owner = new UserSendDto
+                {
+                    UserId = l.Owner.UserId,
+                    Username = l.Owner.Username,
+                    Avatar = l.Owner.Avatar,
+                    FirstName = l.Owner.FirstName,
+                    LastName = l.Owner.LastName,
+                    LastSeen = l.Owner.LastSeen,
+                    LessonCount = l.Owner.Lesson.Count
+                }
             })
             .ToList();
 
             return Ok(result);
+        }
+        // GET: api/user/lastWeekActivity
+        // Method to get list of days when user was learning (had flashcardsLogs)
+        [Authorize]
+        [HttpGet("lastWeekActivity")]
+        public async Task<ActionResult<List<DateTime>>> GetLastWeekActivity()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _context.User
+                .Include(u => u.FlashcardLog)
+                .FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
+            if (user == null) return NotFound("User not found");
+            var flashcardLogs = user.FlashcardLog
+                .Select(l => l.Date.Date)
+                .Distinct()
+                .Where(d => d >= DateTime.UtcNow.AddDays(-6))
+                .ToList();
+            return Ok(flashcardLogs);
         }
 
         // POST: api/user/register
