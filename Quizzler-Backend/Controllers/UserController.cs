@@ -88,25 +88,6 @@ namespace Quizzler_Backend.Controllers
         {
             return await _userService.GetLastWeekActivityAsync(User);
         }
-        // GET: api/user/lastWeekActivity
-        // Method to get list of days when user was learning (had flashcardsLogs)
-        [Authorize]
-        [HttpGet("lastWeekActivity")]
-        public async Task<ActionResult<List<DateTime>>> GetLastWeekActivity()
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _context.User
-                .Include(u => u.FlashcardLog)
-                .FirstOrDefaultAsync(u => u.UserId.ToString() == userId);
-            if (user == null) return NotFound("User not found");
-            var flashcardLogs = user.FlashcardLog
-                .Select(l => l.Date.Date)
-                .Distinct()
-                .Where(d => d >= DateTime.UtcNow.AddDays(-6))
-                .ToList();
-            return Ok(flashcardLogs);
-        }
-
         [HttpPost("register")]
         public async Task<ActionResult<User>> Register(UserRegisterDto userRegisterDto)
         {

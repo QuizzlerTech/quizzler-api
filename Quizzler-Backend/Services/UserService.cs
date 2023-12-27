@@ -64,7 +64,6 @@ namespace Quizzler_Backend.Services
 
         public bool IsPasswordGoodEnough(string password)
         {
-            // Implement additional password strength checks as needed
             return password.Length >= 8;
         }
 
@@ -98,7 +97,6 @@ namespace Quizzler_Backend.Services
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-                // Add additional claims as needed
             };
 
             var token = new JwtSecurityToken(
@@ -111,13 +109,13 @@ namespace Quizzler_Backend.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        public async Task<ActionResult<UserProfileDto>> GetMyProfileAsync(ClaimsPrincipal user)
+        public async Task<ActionResult<UserProfileDto>> GetMyProfileAsync(ClaimsPrincipal userPrincipal)
         {
-            if (!int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            int? userId = GetUserId(userPrincipal);
+            if (userId == null)
             {
-                return new BadRequestResult();
+                return new NotFoundObjectResult("Invalid user identifier");
             }
-
             var userEntity = await _context.User.FindAsync(userId);
             if (userEntity == null)
             {
@@ -221,9 +219,10 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<User>> UpdateUserAsync(ClaimsPrincipal userPrincipal, UserUpdateDto userUpdateDto)
         {
-            if (!int.TryParse(userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            int? userId = GetUserId(userPrincipal);
+            if (userId == null)
             {
-                return new BadRequestResult();
+                return new NotFoundObjectResult("Invalid user identifier");
             }
 
             var user = await _context.User.Include(u => u.LoginInfo).FirstOrDefaultAsync(u => u.UserId == userId);
@@ -275,11 +274,11 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<User>> UpdateUserAvatarAsync(ClaimsPrincipal userPrincipal, UserUpdateAvatarDto userUpdateAvatarDto)
         {
-            if (!int.TryParse(userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            int? userId = GetUserId(userPrincipal);
+            if (userId == null)
             {
-                return new BadRequestResult();
+                return new NotFoundObjectResult("Invalid user identifier");
             }
-
             var user = await _context.User.FindAsync(userId);
             if (user == null)
             {
@@ -293,11 +292,11 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<User>> DeleteUserAsync(ClaimsPrincipal userPrincipal, string userPassword)
         {
-            if (!int.TryParse(userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            int? userId = GetUserId(userPrincipal);
+            if (userId == null)
             {
-                return new BadRequestResult();
+                return new NotFoundObjectResult("Invalid user identifier");
             }
-
             var user = await _context.User.FindAsync(userId);
             if (user == null || !await AreCredentialsCorrect(new UserLoginDto { Email = user.Email, Password = userPassword }))
             {
@@ -307,13 +306,13 @@ namespace Quizzler_Backend.Services
             await _context.SaveChangesAsync();
             return new OkObjectResult("User deleted successfully.");
         }
-        public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetMyLessonsAsync(ClaimsPrincipal user)
+        public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetMyLessonsAsync(ClaimsPrincipal userPrincipal)
         {
-            if (!int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            int? userId = GetUserId(userPrincipal);
+            if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
             }
-
             var lessons = await _context.Lesson
                 .Where(l => l.OwnerId == userId)
                 .Select(l => new LessonInfoSendDto
@@ -365,13 +364,13 @@ namespace Quizzler_Backend.Services
             return new OkObjectResult(lessons);
         }
 
-        public async Task<ActionResult<IEnumerable<DateTime>>> GetUserFlashcardsCreationDatesAsync(ClaimsPrincipal user)
+        public async Task<ActionResult<IEnumerable<DateTime>>> GetUserFlashcardsCreationDatesAsync(ClaimsPrincipal userPrincipal)
         {
-            if (!int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            int? userId = GetUserId(userPrincipal);
+            if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
             }
-
             var creationDates = await _context.Flashcard
                 .Where(f => f.Lesson.OwnerId == userId)
                 .Select(f => f.DateCreated)
@@ -380,13 +379,13 @@ namespace Quizzler_Backend.Services
             return new OkObjectResult(creationDates);
         }
 
-        public async Task<ActionResult<IEnumerable<FlashcardLogSendDto>>> GetUserLogsAsync(ClaimsPrincipal user)
+        public async Task<ActionResult<IEnumerable<FlashcardLogSendDto>>> GetUserLogsAsync(ClaimsPrincipal userPrincipal)
         {
-            if (!int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            int? userId = GetUserId(userPrincipal);
+            if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
             }
-
             var logs = await _context.FlashcardLog
                 .Where(log => log.UserId == userId)
                 .Select(log => new FlashcardLogSendDto
@@ -401,69 +400,106 @@ namespace Quizzler_Backend.Services
         }
 
 
-        public async Task<ActionResult<LessonInfoSendCardDto>> GetLastLessonInfoAsync(ClaimsPrincipal user)
+        public async Task<ActionResult<LessonInfoSendCardDto>> GetLastLessonInfoAsync(ClaimsPrincipal userPrincipal)
         {
-            var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId))
+            int? userId = GetUserId(userPrincipal);
+            if (userId == null)
             {
-                return new NotFoundObjectResult("User identifier not found");
+                return new NotFoundObjectResult("Invalid user identifier");
             }
-
             var lastLesson = await _context.FlashcardLog
-                .Where(fl => fl.UserId == userId)
-                .OrderByDescending(l => l.Date)
-                .Include(fl => fl.Lesson)
-                    .ThenInclude(l => l.LessonMedia)
-                .Include(fl => fl.Lesson)
-                    .ThenInclude(l => l.Flashcards)
-                .Select(l => l.Lesson)
+                .AsNoTracking()
+                .Where(l => l.UserId == userId)
+                .Include(l => l.Flashcard)
+                    .ThenInclude(f => f.Lesson)
+                        .ThenInclude(l => l.LessonMedia)
+                .Include(l => l.Flashcard)
+                    .ThenInclude(f => f.Lesson)
+                .Include(l => l.Flashcard)
+                    .ThenInclude(f => f.Lesson)
+                        .ThenInclude(l => l.Likes)
+                 .Include(l => l.Flashcard)
+                    .ThenInclude(f => f.Lesson).ThenInclude(l => l.Owner)
+                .OrderByDescending(fl => fl.Date)
+                    .Select(l => l.Flashcard.Lesson)
                 .FirstOrDefaultAsync();
 
             if (lastLesson == null)
                 return new NotFoundObjectResult("No lessons found");
 
+            var ownerDto = new UserSendDto
+            {
+                UserId = lastLesson.Owner.UserId,
+                Username = lastLesson.Owner.Username,
+                Avatar = lastLesson.Owner.Avatar,
+                FirstName = lastLesson.Owner.FirstName,
+                LastName = lastLesson.Owner.LastName,
+                LastSeen = lastLesson.Owner.LastSeen,
+                LessonCount = lastLesson.Owner.Lesson.Count
+            };
+
             var result = new LessonInfoSendCardDto
             {
                 LessonId = lastLesson.LessonId,
                 Title = lastLesson.Title,
-                Description = lastLesson.Description,
-                ImageName = lastLesson.LessonMedia?.Name,
-                FlashcardCount = lastLesson.Flashcards.Count
+                Description = lastLesson.Description ?? "",
+                ImageName = lastLesson.LessonMedia?.Name ?? "",
+                FlashcardCount = lastLesson.Flashcards.Count,
+                Owner = ownerDto,
+                LikesCount = lastLesson.Likes.Count,
+                IsLiked = lastLesson.Likes.Any(like => like.UserId == userId)
             };
 
             return new OkObjectResult(result);
         }
 
-        public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetLikedLessonsAsync(ClaimsPrincipal user)
+        public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetLikedLessonsAsync(ClaimsPrincipal userPrincipal)
         {
-            var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdStr, out int userId))
+            int? userId = GetUserId(userPrincipal);
+            if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
             }
+            var lessons = await _context.Lesson
+                    .AsNoTracking()
+                    .Include(l => l.LessonMedia)
+                    .Include(l => l.LessonTags).ThenInclude(t => t.Tag)
+                    .Include(l => l.Flashcards)
+                    .Where(l => l.Likes.Any(like => like.UserId == userId) && (l.IsPublic || l.OwnerId == userId))
+                    .Include(l => l.Likes)
+                    .Include(l => l.Owner)
+                    .Select(l => new LessonInfoSendDto
+                    {
+                        LessonId = l.LessonId,
+                        Title = l.Title,
+                        Description = l.Description ?? "",
+                        ImageName = l.LessonMedia!.Name ?? "",
+                        DateCreated = l.DateCreated,
+                        IsPublic = l.IsPublic,
+                        Tags = l.LessonTags.Select(t => t.Tag.Name).ToList(),
+                        FlashcardCount = l.Flashcards.Count,
+                        LikesCount = l.Likes.Count,
+                        IsLiked = l.Likes.Any(like => like.UserId == userId),
+                        Owner = new UserSendDto
+                        {
+                            UserId = l.Owner.UserId,
+                            Username = l.Owner.Username,
+                            Avatar = l.Owner.Avatar,
+                            FirstName = l.Owner.FirstName,
+                            LastName = l.Owner.LastName,
+                            LastSeen = l.Owner.LastSeen,
+                            LessonCount = l.Owner.Lesson.Count
+                        }
+                    })
+                    .ToListAsync();
 
-            var likedLessons = await _context.Lesson
-                .Where(l => l.Likes.Any(like => like.UserId == userId))
-                .Select(l => new LessonInfoSendDto
-                {
-                    LessonId = l.LessonId,
-                    Title = l.Title,
-                    Description = l.Description,
-                    ImageName = l.LessonMedia!.Name,
-                    DateCreated = l.DateCreated,
-                    IsPublic = l.IsPublic,
-                    Tags = l.LessonTags.Select(t => t.Tag.Name).ToList(),
-                    FlashcardCount = l.Flashcards.Count
-                })
-                .ToListAsync();
-
-            return new OkObjectResult(likedLessons);
+            return new OkObjectResult(lessons);
         }
 
-
-        public async Task<ActionResult<IEnumerable<DateTime>>> GetLastWeekActivityAsync(ClaimsPrincipal user)
+        public async Task<ActionResult<IEnumerable<DateTime>>> GetLastWeekActivityAsync(ClaimsPrincipal userPrincipal)
         {
-            if (!int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            int? userId = GetUserId(userPrincipal);
+            if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
             }
@@ -476,6 +512,14 @@ namespace Quizzler_Backend.Services
                 .ToListAsync();
 
             return new OkObjectResult(activities);
+        }
+        private int? GetUserId(ClaimsPrincipal user)
+        {
+            if (!int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return null;
+            }
+            return userId;
         }
     }
 }
