@@ -21,6 +21,7 @@ namespace Quizzler_Backend
             builder.Services.AddScoped<LessonService>();
             builder.Services.AddScoped<GlobalService>();
             builder.Services.AddScoped<FlashcardService>();
+            builder.Services.AddScoped<SearchService>();
             builder.Services.AddControllers();
             builder.Services.AddMemoryCache();
             builder.Services.Configure<KestrelServerOptions>(options =>
@@ -73,16 +74,17 @@ namespace Quizzler_Backend
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy(name: "QuizzlerCORS",
-                                  builder =>
-                                  {
-                                      builder.WithOrigins("https://quizzler.tech",
-                                                          "http://quizzler.tech",
-                                                          "http://www.quizzler.tech",
-                                                          "https://www.quizzler.tech",
-                                                          "http://localhost:3000")
-                                             .AllowAnyHeader()
-                                             .AllowAnyMethod();
-                                  });
+                    builder =>
+                    {
+                        builder.WithOrigins(
+                            "https://quizzler.tech",
+                            "http://quizzler.tech",
+                            "http://www.quizzler.tech",
+                            "https://www.quizzler.tech",
+                            "http://localhost:3000")
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                    });
             });
 
             if (!builder.Environment.IsDevelopment())
@@ -117,7 +119,7 @@ namespace Quizzler_Backend
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Quizzler API");
             });
             app.MapControllers();
             app.UseStaticFiles();

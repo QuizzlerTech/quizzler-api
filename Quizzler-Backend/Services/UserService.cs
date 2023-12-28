@@ -111,7 +111,7 @@ namespace Quizzler_Backend.Services
         }
         public async Task<ActionResult<UserProfileDto>> GetMyProfileAsync(ClaimsPrincipal userPrincipal)
         {
-            int? userId = GetUserId(userPrincipal);
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -219,7 +219,7 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<User>> UpdateUserAsync(ClaimsPrincipal userPrincipal, UserUpdateDto userUpdateDto)
         {
-            int? userId = GetUserId(userPrincipal);
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -274,7 +274,7 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<User>> UpdateUserAvatarAsync(ClaimsPrincipal userPrincipal, UserUpdateAvatarDto userUpdateAvatarDto)
         {
-            int? userId = GetUserId(userPrincipal);
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -292,7 +292,7 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<User>> DeleteUserAsync(ClaimsPrincipal userPrincipal, string userPassword)
         {
-            int? userId = GetUserId(userPrincipal);
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -308,7 +308,7 @@ namespace Quizzler_Backend.Services
         }
         public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetMyLessonsAsync(ClaimsPrincipal userPrincipal)
         {
-            int? userId = GetUserId(userPrincipal);
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -366,7 +366,7 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<IEnumerable<DateTime>>> GetUserFlashcardsCreationDatesAsync(ClaimsPrincipal userPrincipal)
         {
-            int? userId = GetUserId(userPrincipal);
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -381,7 +381,7 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<IEnumerable<FlashcardLogSendDto>>> GetUserLogsAsync(ClaimsPrincipal userPrincipal)
         {
-            int? userId = GetUserId(userPrincipal);
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -402,7 +402,7 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<LessonInfoSendCardDto>> GetLastLessonInfoAsync(ClaimsPrincipal userPrincipal)
         {
-            int? userId = GetUserId(userPrincipal);
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -455,7 +455,7 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetLikedLessonsAsync(ClaimsPrincipal userPrincipal)
         {
-            int? userId = GetUserId(userPrincipal);
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -498,7 +498,7 @@ namespace Quizzler_Backend.Services
 
         public async Task<ActionResult<IEnumerable<DateTime>>> GetLastWeekActivityAsync(ClaimsPrincipal userPrincipal)
         {
-            int? userId = GetUserId(userPrincipal);
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -513,13 +513,6 @@ namespace Quizzler_Backend.Services
 
             return new OkObjectResult(activities);
         }
-        private int? GetUserId(ClaimsPrincipal user)
-        {
-            if (!int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
-            {
-                return null;
-            }
-            return userId;
-        }
+
     }
 }
