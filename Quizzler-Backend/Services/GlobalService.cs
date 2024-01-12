@@ -5,6 +5,7 @@ using MlkPwgen;
 using Quizzler_Backend.Data;
 using Quizzler_Backend.Models;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using System.Security.Claims;
 using System.Text;
 
 
@@ -18,7 +19,14 @@ namespace Quizzler_Backend.Services
         {
             _context = context;
         }
-
+        public int? GetUserIdFromClaims(ClaimsPrincipal user)
+        {
+            if (!int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return null;
+            }
+            return userId;
+        }
         public async Task<Media> SaveImage(IFormFile file, string fileName, int uploaderId)
         {
             var imageMediaType = await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image") ?? throw new InvalidOperationException("No media type found for 'Image'.");

@@ -8,13 +8,10 @@ namespace Quizzler_Backend.Controllers
 {
     [Route("api/admin")]
     [ApiController]
-    public class AdminController : ControllerBase
+    public class AdminController(QuizzlerDbContext context) : ControllerBase
     {
-        private readonly QuizzlerDbContext _context;
-        public AdminController(QuizzlerDbContext context)
-        {
-            _context = context;
-        }
+        private readonly QuizzlerDbContext _context = context;
+
         [Authorize]
         [HttpGet("populate/flashcardLogs")]
         public async Task<ActionResult> PopulateFlashcardLogs()

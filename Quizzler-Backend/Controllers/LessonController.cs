@@ -15,22 +15,11 @@ namespace Quizzler_Backend.Controllers
 {
     [Route("api/lesson")]
     [ApiController]
-    public class LessonController : ControllerBase
+    public class LessonController(QuizzlerDbContext context, LessonService lessonService, GlobalService globalService) : ControllerBase
     {
-        private readonly QuizzlerDbContext _context;
-        private readonly LessonService _lessonService;
-        private readonly UserService _userService;
-        private readonly GlobalService _globalService;
-        private readonly ILogger<LessonController> _logger;
-
-        public LessonController(QuizzlerDbContext context, LessonService lessonService, UserService userService, GlobalService globalService, ILogger<LessonController> logger)
-        {
-            _context = context;
-            _lessonService = lessonService;
-            _userService = userService;
-            _logger = logger;
-            _globalService = globalService;
-        }
+        private readonly QuizzlerDbContext _context = context;
+        private readonly LessonService _lessonService = lessonService;
+        private readonly GlobalService _globalService = globalService;
 
         // GET: api/lesson/{id}
         // Method to get lesson by id
@@ -182,42 +171,35 @@ namespace Quizzler_Backend.Controllers
         [HttpGet("topLessons")]
         public async Task<ActionResult<List<LessonInfoSendCardDto>>> GetTopLessons(int top = 5)
         {
-            try
-            {
-                var loggedUserId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var lessons = await _context.Lesson
-                    .Where(l => l.IsPublic)
-                    .OrderByDescending(l => l.Flashcards.Sum(f => f.FlashcardLog!.Count))
-                    .Take(top)
-                    .Select(l => new LessonInfoSendCardDto
+            var loggedUserId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var lessons = await _context.Lesson
+                .Where(l => l.IsPublic)
+                .OrderByDescending(l => l.Flashcards.Sum(f => f.FlashcardLog!.Count))
+                .Take(top)
+                .Select(l => new LessonInfoSendCardDto
+                {
+                    LessonId = l.LessonId,
+                    Title = l.Title,
+                    Description = l.Description,
+                    FlashcardCount = l.Flashcards.Count,
+                    ImageName = l.LessonMedia!.Name,
+                    Owner = new UserSendDto
                     {
-                        LessonId = l.LessonId,
-                        Title = l.Title,
-                        Description = l.Description,
-                        FlashcardCount = l.Flashcards.Count,
-                        ImageName = l.LessonMedia!.Name,
-                        Owner = new UserSendDto
-                        {
-                            UserId = l.Owner.UserId,
-                            Username = l.Owner.Username,
-                            FirstName = l.Owner.FirstName,
-                            LastName = l.Owner.LastName,
-                            LastSeen = l.Owner.LastSeen,
-                            Avatar = l.Owner.Avatar,
-                            LessonCount = l.Owner.Lesson.Count
-                        },
-                        LikesCount = l.Likes.Count,
-                        IsLiked = l.Likes.Any(l => l.UserId == loggedUserId)
-                    })
-                    .ToListAsync();
+                        UserId = l.Owner.UserId,
+                        Username = l.Owner.Username,
+                        FirstName = l.Owner.FirstName,
+                        LastName = l.Owner.LastName,
+                        LastSeen = l.Owner.LastSeen,
+                        Avatar = l.Owner.Avatar,
+                        LessonCount = l.Owner.Lesson.Count
+                    },
+                    LikesCount = l.Likes.Count,
+                    IsLiked = l.Likes.Any(l => l.UserId == loggedUserId)
+                })
+                .ToListAsync();
 
-                return Ok(lessons);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while getting top lessons");
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request.");
-            }
+            return Ok(lessons);
+
         }
 
         // POST: api/lesson/add
