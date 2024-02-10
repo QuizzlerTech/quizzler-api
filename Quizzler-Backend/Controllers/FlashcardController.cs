@@ -31,39 +31,7 @@ namespace Quizzler_Backend.Controllers
         [HttpPost("add")]
         public async Task<ActionResult<Flashcard>> AddNewFlashcard([FromForm] FlashcardAddDto flashcardAddDto)
         {
-            var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var lessonToAddTo = await _context.Lesson.FirstOrDefaultAsync(u => u.LessonId == flashcardAddDto.LessonId);
-            if (lessonToAddTo == null) return NotFound("Not found the lesson");
-            if (!(lessonToAddTo.OwnerId == userId)) return Unauthorized("User is not the owner of the lesson");
-            var newFlaschard = _flashcardService.CreateNewFlashcard(flashcardAddDto);
-
-            if (flashcardAddDto.QuestionText == null && flashcardAddDto.QuestionImage == null || flashcardAddDto.AnswerText == null && flashcardAddDto.AnswerImage == null) return BadRequest("No text nor image after the update");
-
-            if (flashcardAddDto.QuestionImage != null)
-            {
-                if (!await _globalService.IsImageRightSize(flashcardAddDto.QuestionImage)) return BadRequest("The image size is too large");
-                using var memoryStream = new MemoryStream();
-                await flashcardAddDto.QuestionImage.CopyToAsync(memoryStream);
-                var newMedia = await _globalService.SaveImage(flashcardAddDto.QuestionImage, _flashcardService.GenerateImageName(), userId);
-                if (newMedia == null) return StatusCode(500, "Error saving image");
-                _context.Media.Add(newMedia);
-                newFlaschard.QuestionMedia = newMedia;
-            }
-            if (flashcardAddDto.AnswerImage != null)
-            {
-                if (!await _globalService.IsImageRightSize(flashcardAddDto.AnswerImage)) return BadRequest("The image size is too large");
-                using var memoryStream = new MemoryStream();
-                await flashcardAddDto.AnswerImage.CopyToAsync(memoryStream);
-                var newMedia = await _globalService.SaveImage(flashcardAddDto.AnswerImage, _flashcardService.GenerateImageName(), userId);
-                if (newMedia == null) return StatusCode(500, "Error saving image");
-                _context.Media.Add(newMedia);
-                newFlaschard.AnswerMedia = newMedia;
-            }
-
-            _context.Flashcard.Add(newFlaschard);
-
-            await _context.SaveChangesAsync();
-            return StatusCode(201, $"Created flashcard {newFlaschard.FlashcardId}");
+            return await _flashcardService.AddNewFlashcard(User, flashcardAddDto);
         }
 
         // PATCH: api/flashcard/update
@@ -73,63 +41,7 @@ namespace Quizzler_Backend.Controllers
 
         public async Task<ActionResult<Flashcard>> UpdateFlashcard([FromForm] FlashcardUpdateDto flashcardUpdateDto)
         {
-            var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var flashcard = await _context.Flashcard
-                .Include(f => f.Lesson)
-                .Include(f => f.QuestionMedia)
-                .Include(f => f.AnswerMedia)
-                .FirstOrDefaultAsync(f => f.FlashcardId == flashcardUpdateDto.FlashcardId);
-            if (flashcard == null) return NotFound("Not found the flashcard");
-            if (flashcard.Lesson.OwnerId != userId) return Unauthorized("User is not the owner of the lesson");
-            flashcard.QuestionText = flashcardUpdateDto.QuestionText ?? flashcard.QuestionText;
-            flashcard.AnswerText = flashcardUpdateDto.AnswerText ?? flashcard.AnswerText;
-
-            flashcard.QuestionText = (Request.Form.ContainsKey("QuestionText") && flashcardUpdateDto.QuestionText is null) ? null : flashcard.QuestionText;
-            flashcard.AnswerText = (Request.Form.ContainsKey("AnswerText") && flashcardUpdateDto.AnswerText is null) ? null : flashcard.AnswerText;
-
-            if (Request.Form.ContainsKey("QuestionImage") && flashcardUpdateDto.QuestionImage is null && flashcard.QuestionMedia != null)
-            {
-                var media = flashcard.QuestionMedia;
-                flashcard.QuestionMedia = null;
-                _context.Media.Remove(media);
-            }
-            if (Request.Form.ContainsKey("AnswerImage") && flashcardUpdateDto.AnswerImage is null && flashcard.AnswerMedia != null)
-            {
-                var media = flashcard.AnswerMedia;
-                flashcard.AnswerMedia = null;
-                _context.Media.Remove(media);
-            }
-            if (flashcardUpdateDto.QuestionImage != null)
-            {
-                if (!await _globalService.IsImageRightSize(flashcardUpdateDto.QuestionImage)) return BadRequest("The image size is too large");
-                using var memoryStream = new MemoryStream();
-                await flashcardUpdateDto.QuestionImage.CopyToAsync(memoryStream);
-                var newMedia = await _globalService.SaveImage(flashcardUpdateDto.QuestionImage, _flashcardService.GenerateImageName(), userId);
-                if (newMedia == null) return StatusCode(500, "Error saving image");
-                if (flashcard.QuestionMedia != null) await _globalService.DeleteImage(flashcard.QuestionMedia.Name);
-                _context.Media.Add(newMedia);
-                flashcard.QuestionMedia = newMedia;
-            }
-            if (flashcardUpdateDto.AnswerImage != null)
-            {
-                if (!await _globalService.IsImageRightSize(flashcardUpdateDto.AnswerImage)) return BadRequest("The image size is too large");
-                using var memoryStream = new MemoryStream();
-                await flashcardUpdateDto.AnswerImage.CopyToAsync(memoryStream);
-                var newMedia = await _globalService.SaveImage(flashcardUpdateDto.AnswerImage, _flashcardService.GenerateImageName(), userId);
-                if (newMedia == null) return StatusCode(500, "Error saving image");
-                if (flashcard.AnswerMedia != null)
-                {
-                    _context.Remove(flashcard.AnswerMedia);
-                    await _globalService.DeleteImage(flashcard.AnswerMedia.Name);
-                }
-                _context.Media.Add(newMedia);
-                flashcard.AnswerMedia = newMedia;
-            }
-            if (_flashcardService.IsContentMissing(flashcard)) return BadRequest("No text nor image after the update");
-
-            _context.Flashcard.Update(flashcard);
-            await _context.SaveChangesAsync();
-            return StatusCode(201, $"Updated flashcard {flashcard.FlashcardId}");
+            return await _flashcardService.UpdateFlashcard(User, flashcardUpdateDto);
         }
 
         // DELETE: api/flashcard/delete

@@ -11,7 +11,7 @@
 *.sln.docstates
 
 *.dockerignore
-Dockerfile
+
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

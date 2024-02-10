@@ -19,7 +19,7 @@ namespace Quizzler_Backend.Controllers
             var userId = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId);
             if (user == null) return NotFound();
-            if (user.Username != "admin") return Unauthorized();        // not ideal but serves the role and doesnt require DB changes
+            if (user.Username != "admin") return Unauthorized();
 
             var flashcards = await _context.Flashcard.ToDictionaryAsync(fc => fc.FlashcardId, fc => fc.LessonId);
             await _context.FlashcardLog.ForEachAsync(log =>
