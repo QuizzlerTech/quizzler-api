@@ -4,9 +4,12 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Quizzler_Backend.Controllers.Services;
 using Quizzler_Backend.Data;
 using Quizzler_Backend.Services;
+using Quizzler_Backend.Services.FlashcardServices;
+using Quizzler_Backend.Services.LessonServices;
+using Quizzler_Backend.Services.SearchServices;
+using Quizzler_Backend.Services.UserServices;
 using Serilog;
 using System.Text;
 
@@ -33,12 +36,16 @@ namespace Quizzler_Backend
                 builder.Services.AddScoped<UserAuthenticationService>();
                 builder.Services.AddScoped<UserProfileService>();
                 builder.Services.AddScoped<UserActivityService>();
-                builder.Services.AddScoped<UserUtility>();
+                builder.Services.AddScoped<UserService>();
 
                 builder.Services.AddScoped<LessonService>();
                 builder.Services.AddScoped<GlobalService>();
+
                 builder.Services.AddScoped<FlashcardService>();
+                builder.Services.AddScoped<FlashcardHelperService>();
+
                 builder.Services.AddScoped<SearchService>();
+                builder.Services.AddScoped<SearchHelperService>();
                 builder.Services.AddControllers();
                 builder.Services.AddMemoryCache();
                 builder.Services.AddEndpointsApiExplorer();
@@ -123,10 +130,6 @@ namespace Quizzler_Backend
                 app.UseAuthentication();
                 app.UseAuthorization();
                 app.UseCors("QuizzlerCORS");
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapControllers();
-                });
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
                 {

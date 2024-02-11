@@ -1,4 +1,6 @@
-﻿namespace Quizzler_Backend.Dtos
+﻿using Quizzler_Backend.Dtos.User;
+
+namespace Quizzler_Backend.Dtos.Lesson
 {
     // Data Transfer Object
     public class LessonInfoSendCardDto

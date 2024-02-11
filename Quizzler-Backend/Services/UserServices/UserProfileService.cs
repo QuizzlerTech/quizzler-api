@@ -1,22 +1,23 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Data;
-using Quizzler_Backend.Dtos;
+using Quizzler_Backend.Dtos.Lesson;
+using Quizzler_Backend.Dtos.User;
 using Quizzler_Backend.Models;
 using System.Security.Claims;
 
-namespace Quizzler_Backend.Services
+namespace Quizzler_Backend.Services.UserServices
 {
-    public class UserProfileService(QuizzlerDbContext context, GlobalService globalService, UserUtility userUtility)
+    public class UserProfileService(QuizzlerDbContext context, GlobalService globalService, UserService userUtility)
     {
         private readonly QuizzlerDbContext _context = context;
         private readonly GlobalService _globalService = globalService;
-        private readonly UserUtility _userUtility = userUtility;
+        private readonly UserService _userUtility = userUtility;
 
         // UserProfileService
         public async Task<ActionResult<UserProfileDto>> GetMyProfileAsync(ClaimsPrincipal userPrincipal)
         {
-            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
+            var userId = _globalService.GetUserIdFromClaims(userPrincipal);
             if (userId == null)
             {
                 return new NotFoundObjectResult("Invalid user identifier");
@@ -59,6 +60,61 @@ namespace Quizzler_Backend.Services
                 LastSeen = user.LastSeen,
                 Avatar = user.Avatar
             };
+        }
+        public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetMyLessonsAsync(ClaimsPrincipal userPrincipal)
+        {
+            int? userId = _globalService.GetUserIdFromClaims(userPrincipal);
+            if (userId == null)
+            {
+                return new NotFoundObjectResult("Invalid user identifier");
+            }
+            var lessons = await _context.Lesson
+                .Where(l => l.OwnerId == userId)
+                .Select(l => new LessonInfoSendDto
+                {
+                    LessonId = l.LessonId,
+                    Title = l.Title,
+                    Description = l.Description,
+                    ImageName = l.LessonMedia!.Name,
+                    DateCreated = l.DateCreated,
+                    IsPublic = l.IsPublic,
+                    Tags = l.LessonTags.Select(t => t.Tag.Name).ToList(),
+                    FlashcardCount = l.Flashcards.Count,
+                    Owner = new UserSendDto
+                    {
+                        UserId = l.Owner.UserId,
+                        Username = l.Owner.Username,
+                        Avatar = l.Owner.Avatar
+                    }
+                })
+                .ToListAsync();
+
+            return new OkObjectResult(lessons);
+        }
+        public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetUserLessonsByIdAsync(int id)
+        {
+            var lessons = await _context.Lesson
+                .Where(l => l.OwnerId == id && l.IsPublic)
+                .Select(l => new LessonInfoSendDto
+                {
+                    LessonId = l.LessonId,
+                    Title = l.Title,
+                    Description = l.Description,
+                    ImageName = l.LessonMedia!.Name,
+                    DateCreated = l.DateCreated,
+                    IsPublic = l.IsPublic,
+                    Tags = l.LessonTags.Select(t => t.Tag.Name).ToList(),
+                    FlashcardCount = l.Flashcards.Count,
+                    Owner = new UserSendDto
+                    {
+                        UserId = l.Owner.UserId,
+                        Username = l.Owner.Username,
+                        Avatar = l.Owner.Avatar
+                    }
+                })
+                .ToListAsync();
+
+            return new OkObjectResult(lessons);
         }
         public async Task<ActionResult<User>> UpdateUserAsync(ClaimsPrincipal userPrincipal, UserUpdateDto userUpdateDto)
         {

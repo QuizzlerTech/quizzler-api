@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Dtos.Flashcard;
 using Quizzler_Backend.Dtos.Lesson;
-using Quizzler_Backend.Services;
+using Quizzler_Backend.Services.UserServices;
 
 namespace Quizzler_Backend.Controllers.UserController
 {
@@ -13,18 +12,7 @@ namespace Quizzler_Backend.Controllers.UserController
     {
         private readonly UserActivityService _userActivityService = userActivityService;
 
-        [Authorize]
-        [HttpGet("lessons")]
-        public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetMyLessons()
-        {
-            return await _userActivityService.GetMyLessonsAsync(User);
-        }
 
-        [HttpGet("{id}/lessons")]
-        public async Task<ActionResult<IEnumerable<LessonInfoSendDto>>> GetUserLessonsById(int id)
-        {
-            return await _userActivityService.GetUserLessonsByIdAsync(id);
-        }
 
         [Authorize]
         [HttpGet("flashcardsCreated")]

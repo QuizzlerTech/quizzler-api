@@ -5,28 +5,19 @@ using Quizzler_Backend.Data;
 using Quizzler_Backend.Dtos.Flashcard;
 using Quizzler_Backend.Models;
 using Quizzler_Backend.Services;
+using Quizzler_Backend.Services.FlashcardServices;
 using System.Security.Claims;
 
 namespace Quizzler_Backend.Controllers
 {
     [Route("api/flashcard")]
     [ApiController]
-    public class FlashcardController : ControllerBase
+    public class FlashcardController(QuizzlerDbContext context, GlobalService globalService, FlashcardService flashcardService) : ControllerBase
     {
-        private readonly QuizzlerDbContext _context;
-        private readonly GlobalService _globalService;
-        private readonly FlashcardService _flashcardService;
+        private readonly QuizzlerDbContext _context = context;
+        private readonly GlobalService _globalService = globalService;
+        private readonly FlashcardService _flashcardService = flashcardService;
 
-
-        public FlashcardController(QuizzlerDbContext context, GlobalService globalService, FlashcardService flashcardService)
-        {
-            _context = context;
-            _globalService = globalService;
-            _flashcardService = flashcardService;
-
-        }
-        // POST: api/flashcard/add
-        // Method to create new flashcard
         [Authorize]
         [HttpPost("add")]
         public async Task<ActionResult<Flashcard>> AddNewFlashcard([FromForm] FlashcardAddDto flashcardAddDto)
@@ -34,8 +25,6 @@ namespace Quizzler_Backend.Controllers
             return await _flashcardService.AddNewFlashcard(User, flashcardAddDto);
         }
 
-        // PATCH: api/flashcard/update
-        // Method to update a flashcard  
         [Authorize]
         [HttpPatch("update")]
 
@@ -44,18 +33,19 @@ namespace Quizzler_Backend.Controllers
             return await _flashcardService.UpdateFlashcard(User, flashcardUpdateDto);
         }
 
-        // DELETE: api/flashcard/delete
-        // Method to delete a flashcard
         [Authorize]
         [HttpDelete("delete")]
         public async Task<ActionResult<Flashcard>> Delete(string flashcardId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return Unauthorized("No user found");
-            var flashcard = await _context.Flashcard.Include(f => f.Lesson).FirstOrDefaultAsync(f => f.FlashcardId.ToString() == flashcardId);
+            var flashcard = await _context.Flashcard
+                .Include(f => f.Lesson)
+                .Include(f => f.AnswerMedia)
+                .Include(f => f.QuestionMedia)
+                .FirstOrDefaultAsync(f => f.FlashcardId.ToString() == flashcardId);
             if (flashcard == null) return NotFound("No flashcard found");
 
-            var lesson = flashcard.Lesson;
             if (userId != flashcard.Lesson.OwnerId.ToString()) return Unauthorized("Not user's lesson");
             // Removes flashcard from the database and save changes
             if (flashcard.QuestionMedia != null) await _globalService.DeleteImage(flashcard.QuestionMedia.Name);
@@ -67,8 +57,6 @@ namespace Quizzler_Backend.Controllers
 
         }
 
-        // POST: api/flashcard/log
-        // Method to log the flashcard learned
         [HttpPost("log")]
         public async Task<ActionResult<FlashcardLog>> FlashcardLog(FlashcardLogDto flashcardLogDto)
         {

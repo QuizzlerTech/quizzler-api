@@ -1,16 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Quizzler_Backend.Data;
-using Quizzler_Backend.Dtos;
+using Quizzler_Backend.Dtos.User;
 using Quizzler_Backend.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
 
-namespace Quizzler_Backend.Services
+namespace Quizzler_Backend.Services.UserServices
 {
-    public class UserUtility(QuizzlerDbContext context, IConfiguration configuration, GlobalService globalService)
+    public class UserService(QuizzlerDbContext context, IConfiguration configuration, GlobalService globalService)
     {
         private readonly QuizzlerDbContext _context = context;
         private readonly IConfiguration _configuration = configuration;

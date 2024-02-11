@@ -5,10 +5,19 @@ namespace Quizzler_Backend.Data
 {
     public class QuizzlerDbContext : DbContext
     {
-        public QuizzlerDbContext(DbContextOptions<QuizzlerDbContext> options)
-            : base(options)
-        {
-        }
+        public DbSet<User> User { get; set; }
+        public DbSet<LoginInfo> LoginInfo { get; set; }
+        public DbSet<Lesson> Lesson { get; set; }
+        public DbSet<MediaType> MediaType { get; set; }
+        public DbSet<Media> Media { get; set; }
+        public DbSet<Flashcard> Flashcard { get; set; }
+        public DbSet<Quiz> Quiz { get; set; }
+        public DbSet<Question> Question { get; set; }
+        public DbSet<Answer> Answer { get; set; }
+        public DbSet<Tag> Tag { get; set; }
+        public DbSet<LessonTag> LessonTag { get; set; }
+        public DbSet<FlashcardLog> FlashcardLog { get; set; }
+        public DbSet<Like> Like { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -206,22 +215,9 @@ namespace Quizzler_Backend.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var DB_CONNECTION_STRING = Environment.GetEnvironmentVariable("DbConnection") ?? throw new InvalidOperationException("DbConnection env variable is null or empty.");
-            optionsBuilder.UseMySQL(DB_CONNECTION_STRING);
+            var dbConnectionString = Environment.GetEnvironmentVariable("DbConnection") ?? throw new InvalidOperationException("DbConnection env variable is null or empty.");
+            optionsBuilder.UseMySQL(dbConnectionString);
         }
 
-        public DbSet<User> User { get; set; }
-        public DbSet<LoginInfo> LoginInfo { get; set; }
-        public DbSet<Lesson> Lesson { get; set; }
-        public DbSet<MediaType> MediaType { get; set; }
-        public DbSet<Media> Media { get; set; }
-        public DbSet<Flashcard> Flashcard { get; set; }
-        public DbSet<Quiz> Quiz { get; set; }
-        public DbSet<Question> Question { get; set; }
-        public DbSet<Answer> Answer { get; set; }
-        public DbSet<Tag> Tag { get; set; }
-        public DbSet<LessonTag> LessonTag { get; set; }
-        public DbSet<FlashcardLog> FlashcardLog { get; set; }
-        public DbSet<Like> Like { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Quizzler_Backend.Dtos.Flashcard;
+using Quizzler_Backend.Dtos.User;
 
-namespace Quizzler_Backend.Dtos
+namespace Quizzler_Backend.Dtos.Lesson
 {
     // Data Transfer Object
     public class LessonSendDto

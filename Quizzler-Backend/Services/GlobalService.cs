@@ -4,21 +4,19 @@ using Microsoft.EntityFrameworkCore;
 using MlkPwgen;
 using Quizzler_Backend.Data;
 using Quizzler_Backend.Models;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
 using System.Security.Claims;
 using System.Text;
 
 
 namespace Quizzler_Backend.Services
 {
-    public class GlobalService
+    public class GlobalService(QuizzlerDbContext context)
     {
-        private readonly QuizzlerDbContext _context;
+        private readonly QuizzlerDbContext _context = context;
 
-        public GlobalService(QuizzlerDbContext context)
-        {
-            _context = context;
-        }
         public int? GetUserIdFromClaims(ClaimsPrincipal user)
         {
             if (!int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
@@ -31,58 +29,47 @@ namespace Quizzler_Backend.Services
         {
             var imageMediaType = await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image") ?? throw new InvalidOperationException("No media type found for 'Image'.");
             var imagesPath = Environment.GetEnvironmentVariable("ImagesPath") ?? throw new InvalidOperationException("ImagesPath configuration value is null or empty.");
-            string outputPath = Path.Combine(imagesPath, fileName);
-            try
-            {
-                using (var inputStream = file.OpenReadStream())
-                {
-                    using var image = Image.Load(inputStream);
-                    image.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Size = new Size(800, 600),
-                        Mode = ResizeMode.Max
-                    }));
+            var outputPath = Path.Combine(imagesPath, fileName);
 
-                    await image.SaveAsync(outputPath, new JpegEncoder { Quality = 80 });
-                }
-                Media media = new()
-                {
-                    MediaTypeId = imageMediaType.MediaTypeId,
-                    UploaderId = uploaderId,
-                    Name = fileName,
-                    FileSize = file.Length
-                };
-
-                return media;
-            }
-            catch (IOException ex)
+            await using (var inputStream = file.OpenReadStream())
             {
-                throw ex;
+                using var image = await Image.LoadAsync(inputStream);
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Size = new Size(800, 600),
+                    Mode = ResizeMode.Max
+                }));
+
+                await image.SaveAsync(outputPath, new JpegEncoder { Quality = 80 });
             }
+            Media media = new()
+            {
+                MediaTypeId = imageMediaType.MediaTypeId,
+                UploaderId = uploaderId,
+                Name = fileName,
+                FileSize = file.Length
+            };
+
+            return media;
         }
         public async Task<bool> DeleteImage(string fileName)
         {
-            if (fileName == null) throw new ArgumentNullException(nameof(fileName));
-            string imagesPath = Environment.GetEnvironmentVariable("ImagesPath") ?? throw new InvalidOperationException("The environment variable 'ImagesPath' is not set.");
+            ArgumentNullException.ThrowIfNull(fileName);
+            var imagesPath = Environment.GetEnvironmentVariable("ImagesPath") ?? throw new InvalidOperationException("The environment variable 'ImagesPath' is not set.");
 
             var fullImagePath = Path.Combine(imagesPath, Path.GetFileName(fileName));
             if (!File.Exists(fullImagePath)) throw new FileNotFoundException("The specified file does not exist.", fullImagePath);
-            try
-            {
-                await Task.Run(() => File.Delete(fullImagePath));
-                return true;
-            }
-            catch (IOException ex)
-            {
-                throw ex;
-            }
+
+            await Task.Run(() => File.Delete(fullImagePath));
+            return true;
+
         }
         public async Task<bool> IsImageRightSize(IFormFile file)
         {
             var imageMediaType = await _context.MediaType.FirstOrDefaultAsync(u => u.TypeName == "Image") ?? throw new InvalidOperationException("No media type found for 'Image'.");
-
             return file.Length > 0 && file.Length < imageMediaType.MaxSize;
         }
+
         // Hash a password using Argon2
         public string HashPassword(string password, string salt)
         {
@@ -96,6 +83,7 @@ namespace Quizzler_Backend.Services
                 Salt = Encoding.UTF8.GetBytes(salt),
                 HashLength = 60
             };
+
 
             var argon2 = new Argon2(config);
 

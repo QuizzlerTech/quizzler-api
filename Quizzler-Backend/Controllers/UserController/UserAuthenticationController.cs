@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Quizzler_Backend.Dtos;
+using Quizzler_Backend.Dtos.User;
 using Quizzler_Backend.Models;
-using Quizzler_Backend.Services;
+using Quizzler_Backend.Services.UserServices;
 
 namespace Quizzler_Backend.Controllers.UserController
 {

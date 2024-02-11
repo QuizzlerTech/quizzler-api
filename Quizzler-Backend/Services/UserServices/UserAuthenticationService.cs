@@ -3,20 +3,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Quizzler_Backend.Controllers.UserController;
 using Quizzler_Backend.Data;
-using Quizzler_Backend.Dtos;
+using Quizzler_Backend.Dtos.User;
 using Quizzler_Backend.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Quizzler_Backend.Services
+namespace Quizzler_Backend.Services.UserServices
 {
-    public class UserAuthenticationService(QuizzlerDbContext context, IConfiguration configuration, GlobalService globalService, UserUtility userUtility)
+    public class UserAuthenticationService(QuizzlerDbContext context, IConfiguration configuration, GlobalService globalService, UserService userUtility)
     {
         private readonly QuizzlerDbContext _context = context;
         private readonly IConfiguration _configuration = configuration;
         private readonly GlobalService _globalService = globalService;
-        private readonly UserUtility _userUtility = userUtility;
+        private readonly UserService _userUtility = userUtility;
 
         // UserAuthenticationService
         public async Task<ActionResult<User>> RegisterAsync(UserRegisterDto userRegisterDto)

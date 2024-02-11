@@ -1,4 +1,4 @@
-﻿namespace Quizzler_Backend.Dtos
+﻿namespace Quizzler_Backend.Dtos.Lesson
 {
     // Data Transfer Object
     public class LessonAddDto

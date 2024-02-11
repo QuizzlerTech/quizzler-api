@@ -2,23 +2,18 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Data;
-using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Dtos.Lesson;
 using Quizzler_Backend.Dtos.Search;
-using Quizzler_Backend.Services;
+using Quizzler_Backend.Dtos.User;
 using System.Security.Claims;
 
-namespace Quizzler_Backend.Controllers.Services
+namespace Quizzler_Backend.Services.SearchServices
 {
-    public class SearchService
+    public class SearchService(QuizzlerDbContext context, GlobalService globalService)
     {
-        private readonly GlobalService _globalService;
-        private readonly QuizzlerDbContext _context;
-        public SearchService(QuizzlerDbContext context, GlobalService globalService)
-        {
-            _context = context;
-            _globalService = globalService;
-        }
+        private readonly GlobalService _globalService = globalService;
+        private readonly QuizzlerDbContext _context = context;
+
         public class FuzzyMatchResult
         {
             public string Target { get; set; } = string.Empty;
@@ -43,10 +38,12 @@ namespace Quizzler_Backend.Controllers.Services
                 .Include(u => u.Lesson)
                 .ToListAsync();
 
-            var preliminaryLessonResults = await _context.Lesson.AsNoTracking()
+            var preliminaryLessonResults = await
+                _context.Lesson.AsNoTracking()
                 .Where(l => l.Title.ToLower().Contains(queryLower) || l.LessonTags.Any(lt => lt.Tag.Name.Contains(queryLower) || queryLower.Contains(lt.Tag.Name) && (l.IsPublic || l.OwnerId == userId)))
                 .Include(l => l.LessonMedia)
                 .Include(l => l.Owner)
+                    .ThenInclude(u => u.Lesson)
                 .Include(l => l.Flashcards)
                 .Include(l => l.LessonTags)
                     .ThenInclude(lt => lt.Tag)
@@ -87,9 +84,9 @@ namespace Quizzler_Backend.Controllers.Services
                         Avatar = l.Owner.Avatar,
                         LessonCount = l.Owner.Lesson.Count
                     },
-                    Tags = l.LessonTags.Where(t => t.Tag != null).Select(t => t.Tag.Name).ToList(),
+                    Tags = l.LessonTags.Select(t => t.Tag.Name).ToList(),
                     LikesCount = l.Likes.Count,
-                    IsLiked = l.Likes.Any(l => l.UserId == userId),
+                    IsLiked = l.Likes.Any(like => like.UserId == userId),
                     DateCreated = l.DateCreated,
                 })
                 .Take(5)
@@ -103,9 +100,8 @@ namespace Quizzler_Backend.Controllers.Services
 
             return new OkObjectResult(combinedResults);
         }
-        private static FuzzyMatchResult FuzzyMatch(string query, List<string> targets)
+        private static FuzzyMatchResult FuzzyMatch(string query, IEnumerable<string> targets)
         {
-            targets = targets.Where(t => t != null).ToList();
             var match = Process.ExtractOne(query, targets);
             if (match != null)
             {

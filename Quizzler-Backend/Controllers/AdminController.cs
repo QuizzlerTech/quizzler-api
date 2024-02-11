@@ -12,6 +12,8 @@ namespace Quizzler_Backend.Controllers
     {
         private readonly QuizzlerDbContext _context = context;
 
+
+        // deprecated
         [Authorize]
         [HttpGet("populate/flashcardLogs")]
         public async Task<ActionResult> PopulateFlashcardLogs()

@@ -1,23 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.SecurityTokenService;
 using Quizzler_Backend.Data;
 using Quizzler_Backend.Dtos.Flashcard;
 using Quizzler_Backend.Models;
 using System.Security.Claims;
 
-namespace Quizzler_Backend.Services
+namespace Quizzler_Backend.Services.FlashcardServices
 {
-    public class FlashcardService
+    public class FlashcardService(GlobalService globalService, QuizzlerDbContext context)
     {
-        private readonly GlobalService _globalService;
-        private readonly QuizzlerDbContext _context;
+        private readonly GlobalService _globalService = globalService;
+        private readonly QuizzlerDbContext _context = context;
 
-        public FlashcardService(GlobalService globalService, QuizzlerDbContext context)
-        {
-            _globalService = globalService;
-            _context = context;
-        }
         public Flashcard CreateNewFlashcard(FlashcardAddDto flashcardAddDto)
         {
             var flashcard = new Flashcard
@@ -69,14 +63,15 @@ namespace Quizzler_Backend.Services
         {
             var imageName = GenerateImageName();
             var newMedia = await _globalService.SaveImage(image, imageName, userId);
-            if (newMedia == null) return null;
             _context.Media.Add(newMedia);
             await _context.SaveChangesAsync();
             return newMedia;
         }
         public async Task<ActionResult> UpdateFlashcard(ClaimsPrincipal userPrincipal, FlashcardUpdateDto flashcardUpdateDto)
         {
-            int userId = int.Parse(userPrincipal.FindFirstValue("sub"));
+            string? userIdtemp = userPrincipal.FindFirstValue("sub");
+            if (userIdtemp == null) return new UnauthorizedResult();
+            int userId = int.Parse(userIdtemp);
 
             var flashcard = await _context.Flashcard
                 .Include(f => f.Lesson)
@@ -94,11 +89,13 @@ namespace Quizzler_Backend.Services
             // Handle image updates 
             if (flashcardUpdateDto.QuestionImage != null)
             {
+                if (!await _globalService.IsImageRightSize(flashcardUpdateDto.QuestionImage)) return new BadRequestResult();
                 await UpdateImage(flashcard, flashcardUpdateDto.QuestionImage, "QuestionMedia");
             }
 
             if (flashcardUpdateDto.AnswerImage != null)
             {
+                if (!await _globalService.IsImageRightSize(flashcardUpdateDto.AnswerImage)) return new BadRequestResult();
                 await UpdateImage(flashcard, flashcardUpdateDto.AnswerImage, "AnswerMedia");
             }
 
@@ -113,10 +110,6 @@ namespace Quizzler_Backend.Services
 
         private async Task UpdateImage(Flashcard flashcard, IFormFile image, string mediaPropertyName)
         {
-            if (!await _globalService.IsImageRightSize(image))
-            {
-                throw new BadRequestException("The image size is too large");
-            }
 
             using var memoryStream = new MemoryStream();
             await image.CopyToAsync(memoryStream);
@@ -142,10 +135,10 @@ namespace Quizzler_Backend.Services
         }
         public bool IsContentMissing(Flashcard flashcard)
         {
-            return (flashcard.QuestionText == null && flashcard.QuestionMedia == null) ||
-                   (flashcard.QuestionText == "" && flashcard.QuestionMedia == null) ||
-                   (flashcard.AnswerText == null && flashcard.AnswerMedia == null) ||
-                   (flashcard.AnswerText == "" && flashcard.AnswerMedia == null);
+            return flashcard.QuestionText == null && flashcard.QuestionMedia == null ||
+                   flashcard.QuestionText == "" && flashcard.QuestionMedia == null ||
+                   flashcard.AnswerText == null && flashcard.AnswerMedia == null ||
+                   flashcard.AnswerText == "" && flashcard.AnswerMedia == null;
         }
     }
 }

@@ -1,25 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Quizzler_Backend.Data;
-using Quizzler_Backend.Dtos;
 using Quizzler_Backend.Dtos.Flashcard;
+using Quizzler_Backend.Dtos.Lesson;
 using Quizzler_Backend.Models;
-using Quizzler_Backend.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace Quizzler_Backend.Controllers.Services
+namespace Quizzler_Backend.Services.LessonServices
 {
-    public class LessonService
+    public class LessonService(QuizzlerDbContext context, GlobalService globalService)
     {
-        private readonly GlobalService _globalService;
-        private readonly QuizzlerDbContext _context;
+        private readonly GlobalService _globalService = globalService;
+        private readonly QuizzlerDbContext _context = context;
 
-        public LessonService(QuizzlerDbContext context, GlobalService globalService)
-        {
-            _context = context;
-            _globalService = globalService;
-        }
         public Lesson CreateLesson(LessonAddDto lessonAddDto, int ownerId, User user)
         {
             if (lessonAddDto == null) throw new ArgumentNullException(nameof(lessonAddDto));
@@ -48,9 +42,9 @@ namespace Quizzler_Backend.Controllers.Services
         }
         public bool IsDescriptionCorrect(string description)
         {
-            return (description == null) || (description.Length <= 150);
+            return description.Length < 1 || description.Length <= 150;
         }
-        public string MakeAlphaNumerical(string text)
+        private string MakeAlphaNumerical(string text)
         {
             return Regex.Replace(text, "[^a-zA-Z0-9_.]+", "", RegexOptions.Compiled);
         }
